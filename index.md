@@ -4,7 +4,7 @@ layout: home
 nav_order: 1
 ---
 
-# RAS Mobile Robotics Vision
+# Mobile Robotics
 
 A robotics project focused on robust perception-driven autonomy for mobile robots in real-world environments.
 
@@ -22,13 +22,17 @@ The work is designed for course-driven research and practical autonomous robotic
 
 ## Team
 
-### Name Lastname
-![Name](assets/images/name.jpg)
+# Mohammad Nasr
+[![LinkedIn](https://img.shields.io/badge/-LinkedIn-blue?style=flat&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/mohammad-nasr-359a68147)
+[![Instagram](https://img.shields.io/badge/-Instagram-purple?logo=instagram&logoColor=white)](https://www.instagram.com/mohammad_nsr127)
+[![Gmail](https://img.shields.io/badge/-Gmail-c14438?style=flat&logo=Gmail&logoColor=white)](mailto:nasrmohammad661@gmail.com)
+[![GitHub](https://img.shields.io/github/followers/mohammadnsr1?label=Follow&style=social)](https://github.com/mohammadnsr1)
 
-- Role: Perception
-- Affiliation: Arizona State University
-- Research Interests: robotics, computer vision, AI
-- GitHub: https://github.com/username
+---
+- 🤖 I am currently involved in research focused on **Robot Learning**.
+- 🧠🔧 My expertise spans **Robot Software Development**, **Aerial Robots**, **Dynamics & Vibration**, **Data Acquisition Systems**, **Acoustics**, **Signal Processing**, and **CAD Design**.
+- 📫 How to reach me: **nasrmohammad661@gmail.com, mnasr3@asu.edu**
+
 
 ### Name Lastname
 ![Name](assets/images/name.jpg)
