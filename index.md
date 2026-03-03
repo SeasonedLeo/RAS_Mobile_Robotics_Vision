@@ -4,7 +4,7 @@ layout: home
 nav_order: 1
 ---
 
-# Active Perception for Accurate Object Localization and Navigation (TurtleBot4, ROS 2)
+# Active Perception for Accurate Object Localization and Navigation
 
 
 
@@ -55,7 +55,7 @@ This perception–action loop repeats until the pose estimate reaches a desired 
 
 ## Project Goals
 
-- Accurate object localization with RGB-D: estimate the target object’s pose on the ground plane \((x, y, \theta)\) in real time.
+- Accurate object localization with RGB-D: estimate the target object’s pose on the ground plane (x, y, θ) in real time.
 - Active perception: choose the next robot viewpoint that improves pose accuracy using a confidence/uncertainty metric.
 - Autonomous navigation: move between viewpoints and to the final approach pose without teleoperation.
 - Integrate perception with robot decision-making
