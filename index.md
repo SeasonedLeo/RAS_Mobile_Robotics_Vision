@@ -4,21 +4,17 @@ layout: home
 nav_order: 1
 ---
 
-# Mobile Robotics
+# Active Perception for Accurate Object Localization and Navigation (TurtleBot4, ROS 2)
 
-A robotics project focused on robust perception-driven autonomy for mobile robots in real-world environments.
+
 
 ![Project Banner](assets/images/banner.png)
 
 ## Project Overview
 
-This project develops an integrated robotics system for perception, localization, and decision-making in autonomous navigation tasks.
+We are building a TurtleBot4 system that can localize a target object (e.g., a box or cylinder) using RGB-D perception and then autonomously move to improve that estimate. Starting from an initial view, the robot computes an object pose estimate along with a confidence score. Based on this estimate, it selects a next-best viewpoint to reduce pose uncertainty through an active perception strategy.
 
-The platform targets a mobile robot stack using TurtleBot 4, ROS2, RGB-D sensing, and LiDAR to support both simulation and real-robot deployment.
-
-Our technical focus is on perception pipelines, object and scene understanding, pose estimation, and navigation-aware planning.
-
-The work is designed for course-driven research and practical autonomous robotics experimentation.
+This perception–action loop repeats until the pose estimate reaches a desired accuracy threshold. During this process, the robot plans and navigates to each next-best viewpoint while safely handling static and dynamic obstacles using ROS 2 navigation tools.
 
 ## Team
 
@@ -59,9 +55,9 @@ The work is designed for course-driven research and practical autonomous robotic
 
 ## Project Goals
 
-- Detect and localize objects using RGB-D data
-- Estimate 6-DoF object pose
-- Plan safe navigation paths
+- Accurate object localization with RGB-D: estimate the target object’s pose on the ground plane \((x, y, \theta)\) in real time.
+- Active perception: choose the next robot viewpoint that improves pose accuracy using a confidence/uncertainty metric.
+- Autonomous navigation: move between viewpoints and to the final approach pose without teleoperation.
 - Integrate perception with robot decision-making
 
 ## Quick Links
