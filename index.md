@@ -66,6 +66,6 @@ The work is designed for course-driven research and practical autonomous robotic
 
 ## Quick Links
 
-- 📂 Repository: https://github.com/ORG/REPO
+- 📂 Repository: https://github.com/mohammadnsr1/MobileRobots_Active_Perception.git
 - 📖 Documentation: docs/
 - 🎥 Demo: (add later)
