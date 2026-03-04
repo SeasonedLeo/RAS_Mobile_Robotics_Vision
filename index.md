@@ -30,13 +30,14 @@ This perception–action loop repeats until the pose estimate reaches a desired 
 - 📫 How to reach me: **nasrmohammad661@gmail.com, mnasr3@asu.edu**
 
 
-### Name Lastname
-![Name](assets/images/name.jpg)
+### Name Vikas Narang
+[![LinkedIn](https://img.shields.io/badge/-LinkedIn-blue?style=flat&logo=Linkedin&logoColor=white)](https://www.linkedin.com/in/vikas-n-ba21aa11)
+[![Gmail](https://img.shields.io/badge/-Gmail-c14438?style=flat&logo=Gmail&logoColor=white)](mailto:vikasnar@gmail.com)
+[![GitHub](https://img.shields.io/github/followers/mohammadnsr1?label=Follow&style=social)](https://github.com/SeasonedLeo)
 
-- Role: Navigation
-- Affiliation: Arizona State University
-- Research Interests: robot autonomy, mapping, motion planning
-- GitHub: https://github.com/username
+
+- Research Interests: Robot autonomy, mapping, motion planning , controls , data driven controls, simulation.
+- 📫 How to reach me: **vikasnar@gmail.com, vnarang2@asu.edu**
 
 ### Name Lastname
 ![Name](assets/images/name.jpg)
