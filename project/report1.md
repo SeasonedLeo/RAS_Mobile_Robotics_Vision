@@ -5,11 +5,10 @@ parent: Project
 nav_order: 1
 ---
 
-# Report 1: XX
-# Vikas Test  . 
+# Report 1: Active Perception for Accurate Object Localization and Navigation
 {: .no_toc }
 
-This page demonstrates the core capabilities of the Just the Docs theme, including navigation, mathematical typesetting, and technical diagrams.
+**Robot:** TurtleBot4 · **Stack:** ROS 2, Nav2, RGB-D perception, next-best-view (NBV)
 
 ---
 
@@ -22,84 +21,138 @@ This page demonstrates the core capabilities of the Just the Docs theme, includi
 
 ---
 
-## 1. Mathematical Formulas
-The probability density function of a Gaussian distribution is defined as:
+## 1. Mission Statement & Scope
 
-$$p(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}$$
+### 1.1 Mission Statement
 
-Where:
-- $$\mu$$ is the mean (peak location).
-- $$\sigma$$ is the standard deviation (width of the "bell").
+ he goal of this project is to develop an autonomous mobile robot system capable of accurately localizing a target object using RGB-D perception and actively improving this estimate through motion. The TurtleBot4 will estimate the target object's ground-plane pose relative to the robot and compute a confidence metric representing the reliability of the estimate.
+
+Using an active perception loop, the system will determine the next-best viewpoint that is expected to reduce pose uncertainty. The robot will autonomously navigate to these viewpoints while avoiding obstacles using the ROS2 Nav2 navigation stack or a reactive controller till a desired confidence threshold is achieved.
+
+### 1.2 Scope
+
+| In scope | Out of scope |
+| :--- | :--- |
+| Localization of a single target object (e.g., box or cylinder) on the ground plane | Multi-object simultaneous tracking |
+| Indoor navigation with static and dynamic obstacles | Outdoor or unstructured terrain |
+| Next-best-view selection based on confidence/uncertainty | Full 6-DOF object pose or manipulation |
+| Nav2 for path planning and obstacle avoidance | Developing a custom SLAM or navigation framework |
+
+
+### 1.3 Success State (Measurable)
+
+- The system will be considered successful if the following conditions are met:
+
+- The robot can estimate the ground-plane pose of a target object using RGB-D data.
+
+- The system can evaluate pose confidence and select a next-best viewpoint to improve localization accuracy.
+
+- The robot autonomously navigates between viewpoints while avoiding obstacles.
+
+- The pose estimate converges to a stable solution within a predefined confidence threshold.
+
+
+### 1.4 Environment Description
+
+- Indoor hallway/room 
+- Target objects (e.g., boxes, cylinders) on the ground;
+- static obstacles (furniture, walls) and optional dynamic obstacles (e.g., pedestrians).
 
 ---
 
-## 2. Code Implementation
+## 2. Technical Specifications
 
-Below is a snippet of the Python code used to process the assignment data.
+### 2.1 Robot Platform
 
-```python
-import numpy as np
+- **Platform:** TurtleBot 4.
+- **Base:** Differential drive.
+- **Onboard sensors:** RGB-D camera, LiDAR, IMU. 
 
-def calculate_velocity(displacement, time):
-    """Calculates average velocity."""
-    return np.divide(displacement, time)
+### 2.2 Kinematic Model
 
-print(f"Result: {calculate_velocity(100, 20)} m/s")
+- **Model:** Differential drive.
+- **State:** (x, y, θ) on the ground plane; forward kinematics from wheel velocities.
+
+### 2.3 Perception Stack
+
+| Component | Role |
+| :--- | :--- | :--- |
+| RGB-D camera | Depth + color; point cloud and images | 
+| LiDAR | 2D scan for Nav2 costmaps and obstacle detection, sensor fusion with camera to for reliable depth estimation | 
+| IMU | Odometry / orientation support |
+
+---
+
+## 3. High-Level System Architecture
+
+### 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
+
+
+
+
+### 3.2 Module Declaration Table
+
 
 ```
 
 ---
 
-## 3. Section & Sub-sections
+## 4. Module Intent
 
-The sidebar will automatically highlight the section you are currently viewing.
+### 4.1 Library Modules
 
-### 3.1 Observations
+**RGB-D driver (e.g., RealSense)**  
+ 
 
-* Observation A: The system remained stable under load.
-* Observation B: Latency increased during the second trial.
 
-### 3.2 Conclusion
 
-The experiment met all primary objectives. Future work should focus on optimizing the data pipeline.
 
 ---
 
-## 4. Media
+### 4.2 Custom Modules
 
-You can include images by placing them in the `assets/images/` folder.
+**Object pose estimation from RGB-D (ground-plane x, y, yaw)**  
 
-![Alt text](../assets/images/logo.png){: width="500" }
 
-*Figure 1: Class Logo*
+**Confidence scoring / stability filtering**  
+
+
+**NBV viewpoint selection policy**  
+
+
+**Goal update gating / replanning trigger**  
+
 
 ---
 
-## 5. Submission Checklist
+## 5. Safety & Operational Protocol
 
-* [x] Complete Markdown documentation
-* [x] Verify LaTeX rendering
-* [x] Generate Mermaid flowchart
-* [ ] Peer review feedback
+### 5.1 Deadman Switch / Timeout Logic
 
-# Markdown Features
 
-## Callouts
-> This is a note
-{: .note }
+### 5.2 Conditions Triggering E-Stop
 
-> This is a warning
-{: .warning }
 
-## Buttons
-[Main Button](assignment1.html){: .btn .btn-primary }
-[Blue Button](assignment2.html){: .btn .btn-blue }
-[Blue Button](assignment3.html){: .btn .btn-red }
+### 5.3 Behavior on Sensor Dropout or Localization Failure
 
-## Tables
 
-| Header | Header |
-| :--- | :--- |
-| Cell | Cell |
+---
+
+## 6. Git Infrastructure
+
+### 6.1 Repository
+
+- **GitHub Page:** https://seasonedleo.github.io/RAS_Mobile_Robotics_Vision/
+- **GitHub Repository :** https://github.com/mohammadnsr1/MobileRobots_Active_Perception
+
+
+
+```
+
+---
+
+## 7. Next Steps (Before M2)
+
+
 
 ---
