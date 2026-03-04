@@ -93,7 +93,6 @@ Using an active perception loop, the system will determine the next-best viewpoi
 ### 3.2 Module Declaration Table
 
 
-```
 
 ---
 
