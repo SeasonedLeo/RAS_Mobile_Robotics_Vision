@@ -169,6 +169,14 @@ flowchart LR
 
 ### 3.2 Module Declaration Table
 
+| Module Node | Function Domain | S0ftware Type | Description |
+| :--- | :--- | :--- | :--- | 
+| | | | |
+|  | | | |
+|  |  | | |
+| |  | | |
+
+
 
 
 ---
