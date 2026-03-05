@@ -118,9 +118,15 @@ flowchart LR
     ALGO2SF[ALGO2SF]
   end
 
+   subgraph EST[Estimation]
+    SLAM[SLAM Toolbox]
+    EKF[Robot Localization /EKF]
+  end
+
  
 
   subgraph PL[Planning]
+    NAV2[Nav2 Global Planner]
     RC[Reactive Controller]
     SFT[Safety & Operational Protocol]
   end
@@ -137,11 +143,16 @@ flowchart LR
   SENS2 --> SF -->A
   SENS1 --> SFT--> DDC
   SENS3 -->SFT
+  P -->EST
+  PL -->A
 
   RC --> DDC --> MHI
 
   %% Fast obstacle feedback
   SENS1 -. "Fast Obstacle Feedback" .-> RC
+  EST -. "Validation" .-> VO
+ 
+
 
   %% Node colors (fill, border, border width)
   style P fill:#ffb3ff,stroke:#333,stroke-width:1px
