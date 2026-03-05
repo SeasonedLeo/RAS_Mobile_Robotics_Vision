@@ -35,6 +35,7 @@ This perception–action loop repeats until the pose estimate reaches a desired 
 [![Gmail](https://img.shields.io/badge/-Gmail-c14438?style=flat&logo=Gmail&logoColor=white)](mailto:vikasnar@gmail.com)
 [![GitHub](https://img.shields.io/github/followers/mohammadnsr1?label=Follow&style=social)](https://github.com/SeasonedLeo)
 
+---
 
 - Research Interests: Robot autonomy, mapping, motion planning , controls , data driven controls, simulation.
 - 📫 How to reach me: **vikasnar@gmail.com, vnarang2@asu.edu**
