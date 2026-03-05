@@ -192,6 +192,7 @@ flowchart LR
 #### 4.2.2 Visual Odometery
 
 
+
 ---
 
 ## 5. Safety & Operational Protocol
@@ -219,6 +220,9 @@ The system monitors both message freshness and validity/quality for sensors and 
 Lidar: The system monitors $$/scan$$ (sensor_msgs/msg/LaserScan). If no scan is received for $$T_{scan}$$(typical: 0.5–1.0 s), the robot commands zero velocity and enters SAFE_STOP. Autonomous motion remains disabled until /scan returns and remains healthy for a sustained window (e.g., 1–2 s of continuous messages).
 
 Odometry: The system monitors $$/odom$$ . If odometry messages stop for $$T_{odom}$$ (typical: 0.5–1.0 s), the robot enters SAFE_STOP. This prevents operation without reliable velocity and pose integration.
+
+**Logging and status reporting**
+All safety triggers (deadman timeout, obstacle stop, sensor timeout, localization fault, manual E-stop) are logged with timestamps and the trigger source. A consolidated safety status(e.g., /safety_status) to support debugging and to provide evidence of correct safety behavior during demonstrations.
 
 
 ---
