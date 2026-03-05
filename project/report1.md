@@ -127,9 +127,19 @@ Using an active perception loop, the system will determine the next-best viewpoi
 ## 5. Safety & Operational Protocol
 
 ### 5.1 Deadman Switch / Timeout Logic
+The system implements a deadman (command timeout) mechanism to prevent continued motion in the absence of recent control commands. Each received velocity command updates a timestamp. A periodic safety monitor checks the age of the most recent command. If the elapsed time exceeds a configured timeout threshold, the robot immediately publishes a zero-velocity command and transitions to a safe-stop state.Motion is permitted again only after fresh commands are received and the system remains healthy for a short re-enable window. This logic ensures that a stalled controller, dropped network connection, or crashed teleoperation/planning node results in a prompt, controlled stop.
 
 
 ### 5.2 Conditions Triggering E-Stop
+An emergency stop (E-stop) condition forces an immediate zero-velocity command and places the robot in a latched safe state that requires explicit operator recovery. E-stop is triggered by any of the following:
+
+- Manual E-stop request (hardware button if available or software E-stop command).
+
+- Safety zone violation, defined as an obstacle detected within a minimum stopping distance in the direction of motion.
+
+- Contact or hazard events reported by onboard safety sensors (e.g., bumper activation or cliff detection when available).
+
+- Violation of configured motion limits (linear speed and/or angular rate exceeding allowable bounds).
 
 
 ### 5.3 Behavior on Sensor Dropout or Localization Failure
