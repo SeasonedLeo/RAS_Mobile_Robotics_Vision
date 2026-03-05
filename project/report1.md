@@ -144,7 +144,8 @@ flowchart LR
   SENS1 --> SFT--> DDC
   SENS3 -->SFT
   P -->EST
-  PL -->A
+  PL -->A 
+  NAV2 --> AP
 
   RC --> DDC --> MHI
 
@@ -169,12 +170,12 @@ flowchart LR
 
 ### 3.2 Module Declaration Table
 
-| Module Node | Function Domain | S0ftware Type | Description |
-| :--- | :--- | :--- | :--- | 
-| | | | |
-|  | | | |
-|  |  | | |
-| |  | | |
+| Module Node | Function Domain | S0ftware Type | Description | Owner|
+| :--- | :--- | :--- | :--- | :--- |
+| | | | | |
+|  | | | | |
+|  |  | | | |
+| |  | | | |
 
 
 
