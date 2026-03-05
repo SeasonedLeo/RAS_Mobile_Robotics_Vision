@@ -144,12 +144,12 @@ flowchart LR
   SENS1 -. "Fast Obstacle Feedback" .-> RC
 
   %% Node colors (fill, border, border width)
-  style Perception fill:#ffb3ff,stroke:#333,stroke-width:1px
-  style Visual Odomerty fill:#f3e7c6,stroke:#333,stroke-width:1px
-  style Active Perception  fill:#f3e7c6,stroke:#333,stroke-width:1px
-  style Sensor Fusion   fill:#bfc3ff,stroke:#333,stroke-width:1px
-  style Planning   fill:#bfc3ff,stroke:#333,stroke-width:1px
-  style Actuation  fill:#bff5bf,stroke:#333,stroke-width:1px
+  style P fill:#ffb3ff,stroke:#333,stroke-width:1px
+  style VO fill:#f3e7c6,stroke:#333,stroke-width:1px
+  style AP  fill:#f3e7c6,stroke:#333,stroke-width:1px
+  style SF   fill:#bfc3ff,stroke:#333,stroke-width:1px
+  style PL   fill:#bfc3ff,stroke:#333,stroke-width:1px
+  style A  fill:#bff5bf,stroke:#333,stroke-width:1px
 ``` 
  
   
