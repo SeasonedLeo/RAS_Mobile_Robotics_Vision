@@ -87,12 +87,12 @@ Using an active perception loop, the system will determine the next-best viewpoi
 
 ### 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
 
-'''mermaid
+```mermaid
 flowchart LR
   A[Perception] --> B[Estimation]
   B --> C[Planning]
   C --> D[Actuation]
-'''
+```   
 
 
 
