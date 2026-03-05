@@ -25,7 +25,7 @@ nav_order: 1
 
 ### 1.1 Mission Statement
 
- he goal of this project is to develop an autonomous mobile robot system capable of accurately localizing a target object using RGB-D perception and actively improving this estimate through motion. The TurtleBot4 will estimate the target object's ground-plane pose relative to the robot and compute a confidence metric representing the reliability of the estimate.
+  he goal of this project is to develop an autonomous mobile robot system capable of accurately localizing a target object using RGB-D perception and actively improving this estimate through motion. The TurtleBot4 will estimate the target object's ground-plane pose relative to the robot and compute a confidence metric representing the reliability of the estimate.
 
 Using an active perception loop, the system will determine the next-best viewpoint that is expected to reduce pose uncertainty. The robot will autonomously navigate to these viewpoints while avoiding obstacles using the ROS2 Nav2 navigation stack or a reactive controller till a desired confidence threshold is achieved.
 
@@ -87,6 +87,13 @@ Using an active perception loop, the system will determine the next-best viewpoi
 
 ### 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
 
+'''mermaid
+flowchart LR
+  A[Perception] --> B[Estimation]
+  B --> C[Planning]
+  C --> D[Actuation]
+'''
+
 
 
 
@@ -146,7 +153,7 @@ An emergency stop (E-stop) condition forces an immediate zero-velocity command a
 The system monitors both message freshness and validity/quality for sensors and state estimation. Any failure transitions the robot to SAFE_STOP (zero velocity) immediately and blocks autonomous motion until recovery criteria are met.
 
 **Sensor dropout monitoring**
-Lidar / range sensing: The system monitors $$/scan$$ (sensor_msgs/msg/LaserScan). If no scan is received for $$T_{scan}$$(typical: 0.5–1.0 s), the robot commands zero velocity and enters SAFE_STOP. Autonomous motion remains disabled until /scan returns and remains healthy for a sustained window (e.g., 1–2 s of continuous messages).
+Lidar: The system monitors $$/scan$$ (sensor_msgs/msg/LaserScan). If no scan is received for $$T_{scan}$$(typical: 0.5–1.0 s), the robot commands zero velocity and enters SAFE_STOP. Autonomous motion remains disabled until /scan returns and remains healthy for a sustained window (e.g., 1–2 s of continuous messages).
 
 Odometry: The system monitors $$/odom$$ . If odometry messages stop for $$T_{odom}$$ (typical: 0.5–1.0 s), the robot enters SAFE_STOP. This prevents operation without reliable velocity and pose integration.
 
