@@ -89,10 +89,56 @@ Using an active perception loop, the system will determine the next-best viewpoi
 
 ```mermaid
 flowchart LR
-  A[Perception] --> B[Estimation]
-  B --> C[Planning]
-  C --> D[Actuation]
-```   
+  %% 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
+
+  subgraph P[Perception]
+    SENS1[LiDAR]
+    SENS3[Odometery]
+    SENS4[IMU]
+    SENS2[Depth Camera]
+
+
+  end
+
+ subgraph VO[Visual Odomerty]
+    ALGO1V[ALGO1V]
+    ALGO2V[ALGO2V]
+  end
+
+
+  subgraph AP[Active Perception]
+    ALGO1[ALGO1]
+    ALGO2[ALGO2]
+  end
+
+   subgraph SF[Sensor Fusion]
+    ALGO1SF[ALGO1SF]
+    ALGO2SF[ALGO2SF]
+  end
+
+  subgraph PL[Planning]
+    RC[Reactive Controller]
+    SFT[Safety & Operational Protocol]
+  end
+
+  subgraph A[Actuation]
+    DDC[Diff-Drive Controller]
+    MHI[Motor Hardware Interface]
+  end
+
+  %% Main pipeline
+  SENS2-->AP
+  SENS2 --> VO
+  SENS1 --> SF
+  SENS2 --> SF
+  SENS1 --> SFT--> DDC
+  SENS3 -->SFT
+
+  RC --> DDC --> MHI
+
+  %% Fast obstacle feedback
+  SENS1 -. "Fast Obstacle Feedback" .-> RC
+``` 
 # No changes
 
 
