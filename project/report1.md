@@ -142,14 +142,16 @@ flowchart LR
 
   %% Fast obstacle feedback
   SENS1 -. "Fast Obstacle Feedback" .-> RC
-``` 
- %% Node colors (fill, border, border width)
+
+  %% Node colors (fill, border, border width)
   style Perception fill:#ffb3ff,stroke:#333,stroke-width:1px
   style Visual Odomerty fill:#f3e7c6,stroke:#333,stroke-width:1px
   style Active Perception  fill:#f3e7c6,stroke:#333,stroke-width:1px
   style Sensor Fusion   fill:#bfc3ff,stroke:#333,stroke-width:1px
   style Planning   fill:#bfc3ff,stroke:#333,stroke-width:1px
   style Actuation  fill:#bff5bf,stroke:#333,stroke-width:1px
+``` 
+ 
   
 
 
