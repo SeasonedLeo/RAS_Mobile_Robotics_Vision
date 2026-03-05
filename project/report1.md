@@ -100,6 +100,8 @@ flowchart LR
 
   end
 
+
+
  subgraph VO[Visual Odomerty]
     ALGO1V[ALGO1V]
     ALGO2V[ALGO2V]
@@ -111,10 +113,12 @@ flowchart LR
     ALGO2[ALGO2]
   end
 
-   subgraph SF[Sensor Fusion]
+  subgraph SF[Sensor Fusion]
     ALGO1SF[ALGO1SF]
     ALGO2SF[ALGO2SF]
   end
+
+ 
 
   subgraph PL[Planning]
     RC[Reactive Controller]
@@ -127,10 +131,10 @@ flowchart LR
   end
 
   %% Main pipeline
-  SENS2-->AP
-  SENS2 --> VO
   SENS1 --> SF
-  SENS2 --> SF
+  SENS2-->AP
+  SENS2 --> VO 
+  SENS2 --> SF -->A
   SENS1 --> SFT--> DDC
   SENS3 -->SFT
 
@@ -139,7 +143,14 @@ flowchart LR
   %% Fast obstacle feedback
   SENS1 -. "Fast Obstacle Feedback" .-> RC
 ``` 
-# No changes
+ %% Node colors (fill, border, border width)
+  style Perception fill:#ffb3ff,stroke:#333,stroke-width:1px
+  style Visual Odomerty fill:#f3e7c6,stroke:#333,stroke-width:1px
+  style Active Perception  fill:#f3e7c6,stroke:#333,stroke-width:1px
+  style Sensor Fusion   fill:#bfc3ff,stroke:#333,stroke-width:1px
+  style Planning   fill:#bfc3ff,stroke:#333,stroke-width:1px
+  style Actuation  fill:#bff5bf,stroke:#333,stroke-width:1px
+  
 
 
 
@@ -163,6 +174,8 @@ flowchart LR
 
 ### 4.2 Custom Modules
 
+#### 4.2.1 Active Perception
+
 **Object pose estimation from RGB-D (ground-plane x, y, yaw)**  
 
 
@@ -173,6 +186,8 @@ flowchart LR
 
 
 **Goal update gating / replanning trigger**  
+
+#### 4.2.2 Visual Odometery
 
 
 ---
