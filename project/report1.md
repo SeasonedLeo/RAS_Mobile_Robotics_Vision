@@ -96,38 +96,16 @@ flowchart LR
     IMU[IMU]
   end
 
-  subgraph OBJ[Object Perception Branch]
+  subgraph OBJ[Object Perception]
     PCP[Point Cloud Processing]
     OPE[Object Pose Estimation]
-    OBJ_CAM[Object Pose (camera frame)]
+    OBJ_CAM[Object Pose in Camera Frame]
   end
 
-  subgraph LOC[Robot Localization Branch]
-    VO[Visual SLAM / Visual Odometry]
-    EKF[EKF / Sensor Fusion]
-    RPOSE[Robot Pose (local frame)]
-  end
+  RGBD --> PCP
+  PCP --> OPE
+  OPE --> OBJ_CAM
 
-  subgraph TF[TF / Frames]
-    TF_NODE[TF tree: camera -> base_link -> odom/map]
-    OBJ_LOCAL[Object Pose (robot/local frame)]
-  end
-
-
-  subgraph PL[Planning / Decision]
-    CONF[Pose Confidence Evaluation]
-    NBV[Next-Best-View Prediction]
-    GOAL[Target Viewpoint Pose]
-  end
-
-
-  subgraph ACT[Navigation / Actuation]
-    NAV2[Nav2 Global Planner]
-    REACT[Reactive Controller]
-    DDC[Diff Drive Controller]
-    BASE[Robot Base]
-  end
-  
 ``` 
   
 
