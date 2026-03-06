@@ -89,7 +89,7 @@ Using an active perception loop, the system will determine the next-best viewpoi
 
 ```mermaid
 flowchart LR
-  %% Perception → Estimation → Planning/Decision → Actuation/Navigation (closed-loop)
+  %% Perception -> Estimation -> Planning/Decision -> Actuation/Navigation (closed-loop)
 
   subgraph P[Perception]
     RGBD[RGB-D Camera]
@@ -98,31 +98,26 @@ flowchart LR
   end
 
   subgraph E[Estimation]
-    direction LR
-
     subgraph OBJ[Object Perception Branch]
-      direction LR
       RGBD --> PCP[Point Cloud Processing]
-      PCP --> OPE[Object Pose Estimation\n(target: box/cylinder)]
-      OPE --> OBJ_CAM[Object Pose (camera frame)\n(x, y, yaw)]
+      PCP --> OPE[Object Pose Estimation (target: box/cylinder)]
+      OPE --> OBJ_CAM[Object Pose (camera frame)<br/>(x, y, yaw)]
     end
 
     subgraph LOC[Robot Localization Branch]
-      direction LR
       RGBD --> VO[Visual SLAM / Visual Odometry]
       IMU --> EKF[EKF / Sensor Fusion]
       VO --> EKF
-      EKF --> RPOSE[Robot Pose (local)\n(odom/map)]
+      EKF --> RPOSE[Robot Pose (local)<br/>(odom/map)]
     end
 
-    TF[TF Transform Tree\ncamera → base_link → odom/map]
+    TF[TF Transform Tree<br/>camera -> base_link -> odom/map]
     OBJ_CAM --> TF
     RPOSE --> TF
-    TF --> OBJ_LOCAL[Object Pose (robot/local frame)\n(x, y, yaw)]
+    TF --> OBJ_LOCAL[Object Pose (robot/local frame)<br/>(x, y, yaw)]
   end
 
   subgraph D[Planning / Decision]
-    direction LR
     CONF[Pose Confidence Evaluation]
     NBV[Next-Best-View (NBV) Prediction]
     OBJ_LOCAL --> CONF --> NBV
@@ -131,7 +126,6 @@ flowchart LR
   end
 
   subgraph A[Actuation / Navigation]
-    direction LR
     NAV2[Nav2 Global Planner]
     REACT[Reactive Controller / Local Avoidance]
     DDC[Diff Drive Controller]
@@ -145,9 +139,9 @@ flowchart LR
   end
 
   %% Closed-loop: robot motion produces new sensor observations
-  BASE -. "Move to new viewpoint → new observations" .-> RGBD
-  BASE -. "Move to new viewpoint → new observations" .-> LIDAR
-  BASE -. "Move to new viewpoint → new observations" .-> IMU
+  BASE -.-> RGBD
+  BASE -.-> LIDAR
+  BASE -.-> IMU
 ``` 
  
   
