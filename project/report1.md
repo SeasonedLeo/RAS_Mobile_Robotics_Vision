@@ -25,7 +25,7 @@ nav_order: 1
 
 ### 1.1 Mission Statement
 
-  he goal of this project is to develop an autonomous mobile robot system capable of accurately localizing a target object using RGB-D perception and actively improving this estimate through motion. The TurtleBot4 will estimate the target object's ground-plane pose relative to the robot and compute a confidence metric representing the reliability of the estimate.
+The goal of this project is to develop an autonomous mobile robot system capable of accurately localizing a target object using RGB-D perception and actively improving this estimate through motion. The TurtleBot4 will estimate the target object's ground-plane pose relative to the robot and compute a confidence metric representing the reliability of the estimate.
 
 Using an active perception loop, the system will determine the next-best viewpoint that is expected to reduce pose uncertainty. The robot will autonomously navigate to these viewpoints while avoiding obstacles using the ROS2 Nav2 navigation stack or a reactive controller till a desired confidence threshold is achieved.
 
@@ -78,7 +78,7 @@ Using an active perception loop, the system will determine the next-best viewpoi
 | Component | Role |
 | :--- | :--- | :--- |
 | RGB-D camera | Depth + color; point cloud and images | 
-| LiDAR | 2D scan for Nav2 costmaps and obstacle detection, sensor fusion with camera to for reliable depth estimation | 
+| LiDAR | 2D scan for Nav2 costmaps and obstacle detection, sensor fusion with camera depth data for reliable depth estimation | 
 | IMU | Odometry / orientation support |
 
 ---
@@ -89,79 +89,65 @@ Using an active perception loop, the system will determine the next-best viewpoi
 
 ```mermaid
 flowchart LR
-  %% 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
+  %% Perception → Estimation → Planning/Decision → Actuation/Navigation (closed-loop)
 
   subgraph P[Perception]
-    SENS1[LiDAR]
-    SENS3[Odometery]
-    SENS4[IMU]
-    SENS2[Depth Camera]
-
-
+    RGBD[RGB-D Camera]
+    LIDAR[LiDAR]
+    IMU[IMU]
   end
 
+  subgraph E[Estimation]
+    direction LR
 
+    subgraph OBJ[Object Perception Branch]
+      direction LR
+      RGBD --> PCP[Point Cloud Processing]
+      PCP --> OPE[Object Pose Estimation\n(target: box/cylinder)]
+      OPE --> OBJ_CAM[Object Pose (camera frame)\n(x, y, yaw)]
+    end
 
- subgraph VO[Visual Odomerty]
-    ALGO1V[ALGO1V]
-    ALGO2V[ALGO2V]
+    subgraph LOC[Robot Localization Branch]
+      direction LR
+      RGBD --> VO[Visual SLAM / Visual Odometry]
+      IMU --> EKF[EKF / Sensor Fusion]
+      VO --> EKF
+      EKF --> RPOSE[Robot Pose (local)\n(odom/map)]
+    end
+
+    TF[TF Transform Tree\ncamera → base_link → odom/map]
+    OBJ_CAM --> TF
+    RPOSE --> TF
+    TF --> OBJ_LOCAL[Object Pose (robot/local frame)\n(x, y, yaw)]
   end
 
-
-  subgraph AP[Active Perception]
-    ALGO1[ALGO1]
-    ALGO2[ALGO2]
+  subgraph D[Planning / Decision]
+    direction LR
+    CONF[Pose Confidence Evaluation]
+    NBV[Next-Best-View (NBV) Prediction]
+    OBJ_LOCAL --> CONF --> NBV
+    RPOSE --> NBV
+    NBV --> GOAL[Target Viewpoint Pose]
   end
 
-  subgraph SF[Sensor Fusion]
-    ALGO1SF[ALGO1SF]
-    ALGO2SF[ALGO2SF]
-  end
-
-   subgraph EST[Estimation]
-    SLAM[SLAM Toolbox]
-    EKF[Robot Localization /EKF]
-  end
-
- 
-
-  subgraph PL[Planning]
+  subgraph A[Actuation / Navigation]
+    direction LR
     NAV2[Nav2 Global Planner]
-    RC[Reactive Controller]
-    SFT[Safety & Operational Protocol]
+    REACT[Reactive Controller / Local Avoidance]
+    DDC[Diff Drive Controller]
+    BASE[Robot Base]
+
+    GOAL --> NAV2 --> REACT --> DDC --> BASE
+
+    %% LiDAR supports obstacle avoidance/costmaps (not object pose)
+    LIDAR --> NAV2
+    LIDAR --> REACT
   end
 
-  subgraph A[Actuation]
-    DDC[Diff-Drive Controller]
-    MHI[Motor Hardware Interface]
-  end
-
-  %% Main pipeline
-  SENS1 --> SF
-  SENS2-->AP
-  SENS2 --> VO 
-  SENS2 --> SF -->A
-  SENS1 --> SFT--> DDC
-  SENS3 -->SFT
-  P -->EST
-  PL -->A 
-  NAV2 --> AP
-
-  RC --> DDC --> MHI
-
-  %% Fast obstacle feedback
-  SENS1 -. "Fast Obstacle Feedback" .-> RC
-  EST -. "Validation" .-> VO
- 
-
-
-  %% Node colors (fill, border, border width)
-  style P fill:#ffb3ff,stroke:#333,stroke-width:1px
-  style VO fill:#f3e7c6,stroke:#333,stroke-width:1px
-  style AP  fill:#f3e7c6,stroke:#333,stroke-width:1px
-  style SF   fill:#bfc3ff,stroke:#333,stroke-width:1px
-  style PL   fill:#bfc3ff,stroke:#333,stroke-width:1px
-  style A  fill:#bff5bf,stroke:#333,stroke-width:1px
+  %% Closed-loop: robot motion produces new sensor observations
+  BASE -. "Move to new viewpoint → new observations" .-> RGBD
+  BASE -. "Move to new viewpoint → new observations" .-> LIDAR
+  BASE -. "Move to new viewpoint → new observations" .-> IMU
 ``` 
  
   
