@@ -90,58 +90,84 @@ Using an active perception loop, the system will determine the next-best viewpoi
 ```mermaid
 flowchart LR
   A[Perception] --> B[Estimation]
-  B --> C[Planning]
-  C --> D[Actuation]
- 
-  %% 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
+  B --> C[Planning / Decision]
+  C --> D[Navigation / Actuation]
 
+  %% Perception
   subgraph P[Perception]
-    SENS1[LiDAR]
-    SENS3[Odometery]
-    SENS4[IMU]
-    SENS2[Depth Camera]
-
-
+    RGBD[RGB-D Camera]
+    LIDAR[LiDAR]
+    IMU[IMU]
   end
 
- subgraph VO[Visual Odomerty]
-    ALGO1V[ALGO1V]
-    ALGO2V[ALGO2V]
+  %% Estimation: two parallel branches
+  subgraph OBJ[Object Perception Branch]
+    PCP[Point Cloud Processing]
+    OPE[Object Pose Estimation]
+    OBJ_CAM[Object Pose (camera frame)]
   end
 
-
-  subgraph AP[Active Perception]
-    ALGO1[ALGO1]
-    ALGO2[ALGO2]
+  subgraph LOC[Robot Localization Branch]
+    VO[Visual SLAM / Visual Odometry]
+    EKF[EKF / Sensor Fusion]
+    RPOSE[Robot Pose (local frame)]
   end
 
-   subgraph SF[Sensor Fusion]
-    ALGO1SF[ALGO1SF]
-    ALGO2SF[ALGO2SF]
+  %% TF / transform frames
+  subgraph TF[TF / Frames]
+    TF_NODE[TF tree: camera -> base_link -> odom/map]
+    OBJ_LOCAL[Object Pose (robot/local frame)]
   end
 
-  subgraph PL[Planning]
-    RC[Reactive Controller]
-    SFT[Safety & Operational Protocol]
+  %% Planning / decision
+  subgraph PL[Planning / Decision]
+    CONF[Pose Confidence Evaluation]
+    NBV[Next-Best-View Prediction]
+    GOAL[Target Viewpoint Pose]
   end
 
-  subgraph A[Actuation]
-    DDC[Diff-Drive Controller]
-    MHI[Motor Hardware Interface]
+  %% Navigation / actuation
+  subgraph ACT[Navigation / Actuation]
+    NAV2[Nav2 Global Planner]
+    REACT[Reactive Controller]
+    DDC[Diff Drive Controller]
+    BASE[Robot Base]
   end
 
-  %% Main pipeline
-  SENS2-->AP
-  SENS2 --> VO
-  SENS1 --> SF
-  SENS2 --> SF
-  SENS1 --> SFT--> DDC
-  SENS3 -->SFT
+  %% Object pose branch
+  RGBD --> PCP --> OPE --> OBJ_CAM
 
-  RC --> DDC --> MHI
+  %% Robot localization branch
+  RGBD --> VO
+  IMU --> EKF
+  VO --> EKF --> RPOSE
 
-  %% Fast obstacle feedback
-  SENS1 -. "Fast Obstacle Feedback" .-> RC
+  %% TF fusion of object and robot pose
+  OBJ_CAM --> TF_NODE
+  RPOSE --> TF_NODE
+  TF_NODE --> OBJ_LOCAL
+
+  %% Decision making
+  OBJ_LOCAL --> CONF --> NBV
+  RPOSE --> NBV --> GOAL
+
+  %% Navigation and obstacle avoidance
+  GOAL --> NAV2 --> REACT --> DDC --> BASE
+  LIDAR --> NAV2
+  LIDAR --> REACT
+
+  %% Closed loop: motion leads to new observations
+  BASE --> RGBD
+  BASE --> LIDAR
+  BASE --> IMU
+
+  %% Subgraph colors
+  style P fill:#ffb3ff,stroke:#333,stroke-width:1px
+  style OBJ fill:#fff2cc,stroke:#333,stroke-width:1px
+  style LOC fill:#e6f7ff,stroke:#333,stroke-width:1px
+  style TF fill:#e8e8ff,stroke:#333,stroke-width:1px
+  style PL fill:#bfc3ff,stroke:#333,stroke-width:1px
+  style ACT fill:#bff5bf,stroke:#333,stroke-width:1px
 ``` 
   
 
