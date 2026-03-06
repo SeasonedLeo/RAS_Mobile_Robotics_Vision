@@ -87,6 +87,7 @@ Using an active perception loop, the system will determine the next-best viewpoi
 
 ### 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
 
+```mermaid
 flowchart LR
 
   %% Perception
@@ -151,7 +152,7 @@ flowchart LR
   BASE --> RGBD
   BASE --> LIDAR
   BASE --> IMU
- 
+```
   
 
 
