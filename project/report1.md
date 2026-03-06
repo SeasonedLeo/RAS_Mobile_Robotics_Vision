@@ -222,33 +222,19 @@ This module determines where the robot should move next to improve object pose e
 This module monitors the confidence score of the object pose estimate and determines when navigation goals should be updated. If the confidence is below the desired threshold, the module triggers the next-best-view planner to generate a new viewpoint goal.
 
 ### 4.2.2 Visual Odometry
-
 **Overview**
-
 Visual odometry (VO) estimates the TurtleBot 4’s motion by tracking how the indoor scene changes across a sequence of **stereo** images. The pipeline detects visual features, matches them between frames, uses stereo depth to compute relative motion in **metric scale**, and integrates these motions into a trajectory. Accurate **camera calibration** (intrinsics, stereo baseline, and rectification) is required so pixel measurements map to correct geometry and depth. To reduce drift and improve stability during fast turns or brief visual dropouts, the VO pose will be fused with the IMU using an **EKF**, combining vision-based corrections with high-rate inertial motion cues.
 
----
-
 **Feature Detection**
-
 This step finds repeatable points (e.g., corners or textured patches) in each image that can be tracked over time. It is needed because VO relies on observing consistent scene points across frames. The system will detect keypoints and compute descriptors to represent their local appearance.
 
----
-
 **Feature Matching**
-
 Matching links the same features between consecutive frames (and between the left/right stereo images) to form correspondences. This is required to measure how the scene moved relative to the camera. Matches will be computed using descriptor similarity and then filtered to reject outliers (e.g., ratio test and/or robust geometric checks).
 
----
-
-## Motion Estimation
-
+**Motion Estimation**
 Motion estimation computes the relative rotation and translation between frames from the filtered correspondences. With stereo, depth from disparity provides real-world scale, making the motion estimate physically meaningful indoors. The output is an incremental pose change at each time step.
 
----
-
-## Pose Integration
-
+**Pose Integration**
 Pose integration composes the incremental motions over time to produce a continuous trajectory. Since small errors accumulate and cause drift, the integrated VO pose will be corrected by fusing it with IMU measurements in an EKF for smoother and more reliable indoor localization.
 
 
