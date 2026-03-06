@@ -158,19 +158,19 @@ flowchart LR
 
 ### 3.2 Module Declaration Table
 
-| Module/Node | Function Domain | Software Type | Description | Owner |
+| Module / Node | Function Domain | Software Type | Description | Owner |
 | :--- | :--- | :--- | :--- | :--- |
-| RGBD Camera/LiDAR | Perception | Library | Provides RGB and depth images, and range data. | ROS2 Driver |
-| IMU | Estimation | Library | Provides inertial measurements for robot motion estimation and fusion with visual odometry. | ROS2 Driver |
-| Object Pose | Perception | Custom/Course Concepts,algorithm | Estimates the ground-plane pose (x, y, yaw) of the target object from the segmented point cloud. | Mohammad |
-| Visual Odometry | Estimation | Custom/Library | Tracks visual features between frames to estimate robot motion relative to the environment. | Vikas |
+| RGBD Camera + LiDAR | Perception | Library | Provides RGB images, depth data, and LiDAR range measurements used for perception and obstacle detection. | ROS2 Driver |
+| IMU | Estimation | Library | Provides inertial measurements used for robot motion estimation and fusion with visual odometry. | ROS2 Driver |
+| Object Pose Estimation | Perception | Custom (Course Algorithm) | Estimates the ground-plane pose (x, y, yaw) of the target object from the segmented point cloud generated from RGB-D data. | Mohammad |
+| Visual Odometry | Estimation | Library / Custom Integration | Tracks visual features between frames to estimate robot motion relative to the environment. | Vikas |
 | EKF | Estimation | Library | Fuses IMU and visual odometry data to produce a filtered estimate of robot pose. | Vikas |
 | Next Best View | Planning | Custom | Determines the next viewpoint that maximizes expected improvement in object pose accuracy. | Mohammad |
-| Nav2 Global Planner | Planning | Library | Generates a collision-free global path from the robot’s current pose to the target viewpoint. | Nav2 |
+| Nav2 Global Planner | Planning | Library | Generates a collision-free global path from the robot’s current pose to the selected viewpoint. | Nav2 |
 | Reactive Controller | Planning | Library | Performs local obstacle avoidance and trajectory tracking using LiDAR data. | Nav2 |
 | Diff Drive Controller | Actuation | Library | Converts velocity commands into wheel commands for the differential drive robot. | ROS2 Control |
 | Motor Hardware Interface | Actuation | Library | Interface between controller outputs and the TurtleBot4 motor hardware. | ROS2 Control |
----
+
 
 ## 4. Module Intent
 
