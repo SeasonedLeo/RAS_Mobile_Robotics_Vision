@@ -117,6 +117,17 @@ flowchart LR
     MHI[Motor Hardware Interface]
   end
 
+  %% Perception → Object perception
+  RGBD --> PCP
+  PCP --> OPE
+  OPE --> OBJ_CAM
+
+  %% Perception → Localization
+  RGBD --> VO
+  IMU --> EKF
+  VO --> EKF
+  EKF --> RPOSE
+
 ```
   
 
