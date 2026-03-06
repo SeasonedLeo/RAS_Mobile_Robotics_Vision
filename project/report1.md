@@ -222,19 +222,20 @@ This module determines where the robot should move next to improve object pose e
 This module monitors the confidence score of the object pose estimate and determines when navigation goals should be updated. If the confidence is below the desired threshold, the module triggers the next-best-view planner to generate a new viewpoint goal.
 
 ### 4.2.2 Visual Odometry
-**Overview**
-Visual odometry (VO) estimates the TurtleBot 4’s motion by tracking how the indoor scene changes across a sequence of **stereo** images. The pipeline detects visual features, matches them between frames, uses stereo depth to compute relative motion in **metric scale**, and integrates these motions into a trajectory. Accurate **camera calibration** (intrinsics, stereo baseline, and rectification) is required so pixel measurements map to correct geometry and depth. To reduce drift and improve stability during fast turns or brief visual dropouts, the VO pose will be fused with the IMU using an **EKF**, combining vision-based corrections with high-rate inertial motion cues.
 
-**Feature Detection**
+**Overview**  
+Visual odometry (VO) estimates the TurtleBot 4’s motion by tracking how the indoor scene changes across a sequence of stereo images. The pipeline detects visual features, matches them between frames, uses stereo depth to compute relative motion in metric scale, and integrates these motions into a trajectory. Accurate camera calibration (intrinsics, stereo baseline, and rectification) is required so pixel measurements map to correct geometry and depth. To reduce drift and improve stability during fast turns or brief visual dropouts, the VO pose will be fused with the IMU using an EKF, combining vision-based corrections with high-rate inertial motion cues.
+
+**Feature Detection**  
 This step finds repeatable points (e.g., corners or textured patches) in each image that can be tracked over time. It is needed because VO relies on observing consistent scene points across frames. The system will detect keypoints and compute descriptors to represent their local appearance.
 
-**Feature Matching**
+**Feature Matching**  
 Matching links the same features between consecutive frames (and between the left/right stereo images) to form correspondences. This is required to measure how the scene moved relative to the camera. Matches will be computed using descriptor similarity and then filtered to reject outliers (e.g., ratio test and/or robust geometric checks).
 
-**Motion Estimation**
+**Motion Estimation**  
 Motion estimation computes the relative rotation and translation between frames from the filtered correspondences. With stereo, depth from disparity provides real-world scale, making the motion estimate physically meaningful indoors. The output is an incremental pose change at each time step.
 
-**Pose Integration**
+**Pose Integration**  
 Pose integration composes the incremental motions over time to produce a continuous trajectory. Since small errors accumulate and cause drift, the integrated VO pose will be corrected by fusing it with IMU measurements in an EKF for smoother and more reliable indoor localization.
 
 
@@ -263,12 +264,12 @@ An emergency stop (E-stop) condition forces an immediate zero-velocity command a
 ### 5.3 Behavior on Sensor Dropout or Localization Failure
 The system monitors both message freshness and validity/quality for sensors and state estimation. Any failure transitions the robot to SAFE_STOP (zero velocity) immediately and blocks autonomous motion until recovery criteria are met.
 
-**Sensor dropout monitoring**
+**Sensor dropout monitoring**  
 Lidar: The system monitors $$/scan$$ (sensor_msgs/msg/LaserScan). If no scan is received for $$T_{scan}$$(typical: 0.5–1.0 s), the robot commands zero velocity and enters SAFE_STOP. Autonomous motion remains disabled until /scan returns and remains healthy for a sustained window (e.g., 1–2 s of continuous messages).
 
 Odometry: The system monitors $$/odom$$ . If odometry messages stop for $$T_{odom}$$ (typical: 0.5–1.0 s), the robot enters SAFE_STOP. This prevents operation without reliable velocity and pose integration.
 
-**Logging and status reporting**
+**Logging and status reporting**  
 All safety triggers (deadman timeout, obstacle stop, sensor timeout, localization fault, manual E-stop) are logged with timestamps and the trigger source. A consolidated safety status(e.g., /safety_status) to support debugging and to provide evidence of correct safety behavior during demonstrations.
 
 
@@ -279,4 +280,4 @@ All safety triggers (deadman timeout, obstacle stop, sensor timeout, localizatio
 ### 6.1 Repository
 
 - **GitHub Page:** https://seasonedleo.github.io/RAS_Mobile_Robotics_Vision/
-- **GitHub Repository :** https://github.com/mohammadnsr1 MobileRobots_Active_Perception
+- **GitHub Repository :** https://github.com/mohammadnsr1/MobileRobots_Active_Perception
