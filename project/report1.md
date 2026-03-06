@@ -167,7 +167,6 @@ flowchart LR
 | Object Pose | Perception | Custom/Course Concepts,algorithm | Estimates the ground-plane pose (x, y, yaw) of the target object from the segmented point cloud. | Mohammad |
 | Visual Odometry | Estimation | Custom/Library | Tracks visual features between frames to estimate robot motion relative to the environment. | Vikas |
 | EKF | Estimation | Library | Fuses IMU and visual odometry data to produce a filtered estimate of robot pose. | Vikas |
-
 | Next Best View | Planning | Custom | Determines the next viewpoint that maximizes expected improvement in object pose accuracy. | Mohammad |
 | Nav2 Global Planner | Planning | Library | Generates a collision-free global path from the robot’s current pose to the target viewpoint. | Nav2 |
 | Reactive Controller | Planning | Library | Performs local obstacle avoidance and trajectory tracking using LiDAR data. | Nav2 |
@@ -250,11 +249,5 @@ All safety triggers (deadman timeout, obstacle stop, sensor timeout, localizatio
 
 
 ```
-
----
-
-## 7. Next Steps (Before M2)
-
-
 
 ---
