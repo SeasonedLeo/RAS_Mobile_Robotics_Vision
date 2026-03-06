@@ -207,7 +207,7 @@ This module interfaces the ROS2 control framework with the TurtleBot4 motor hard
 ---
 ### 4.2 Custom Modules
 
-#### 4.2.1 Active Perception
+### 4.2.1 Active Perception
 
 **Object Pose Estimation from RGB-D (ground-plane x, y, yaw)**  
 This module estimates the ground-plane pose of the target object using RGB-D point cloud data. The algorithm follows the point cloud processing pipeline introduced in the course: voxel grid filtering to downsample the cloud, RANSAC plane segmentation to remove the floor, and Euclidean clustering to isolate the object. The centroid of the resulting cluster is used to compute the object’s planar position (x, y), while the dominant orientation of the cluster is used to estimate the yaw angle.
