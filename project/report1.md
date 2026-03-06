@@ -158,8 +158,6 @@ flowchart LR
 
 ### 3.2 Module Declaration Table
 
-### 3.2 Module Declaration Table
-
 | Module/Node | Function Domain | Software Type | Description | Owner |
 | :--- | :--- | :--- | :--- | :--- |
 | RGBD Camera/LiDAR | Perception | Library | Provides RGB and depth images, and range data. | ROS2 Driver |
