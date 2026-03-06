@@ -90,23 +90,18 @@ Using an active perception loop, the system will determine the next-best viewpoi
 ```mermaid
 flowchart LR
 
-  subgraph P[Perception]
-    RGBD[RGB-D Camera]
+  subgraph Perception
+    RGBD[RGBD Camera]
     LIDAR[LiDAR]
     IMU[IMU]
   end
 
-  subgraph OBJ[Object Perception]
-    PCP[Point Cloud Processing]
-    OPE[Object Pose Estimation]
-    OBJ_CAM[Object Pose in Camera Frame]
+  subgraph ObjectPerception
+    PCP[Point Cloud]
+    OPE[Object Pose]
+    OBJ_CAM[Camera Pose]
   end
-
-  RGBD --> PCP
-  PCP --> OPE
-  OPE --> OBJ_CAM
-
-``` 
+```
   
 
 
