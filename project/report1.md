@@ -76,7 +76,7 @@ Using an active perception loop, the system will determine the next-best viewpoi
 ### 2.3 Perception Stack
 
 | Component | Role |
-| :--- | :--- | :--- |
+| :--- | :--- |
 | RGB-D camera | Depth + color; point cloud and images | 
 | LiDAR | 2D scan for Nav2 costmaps and obstacle detection, sensor fusion with camera depth data for reliable depth estimation | 
 | IMU | Odometry / orientation support |
@@ -161,7 +161,7 @@ flowchart LR
 | Module/Node | Function Domain | Software Type | Description | Owner |
 | :--- | :--- | :--- | :--- | :--- |
 | RGBD Camera/LiDAR | Perception | Library | Provides RGB and depth images, and range data. | ROS2 Driver |
-| IMU | Estimation| Library | Provides inertial measurements for robot motion estimation and fusion with visual odometry. | ROS2 Driver |
+| IMU | Estimation | Library | Provides inertial measurements for robot motion estimation and fusion with visual odometry. | ROS2 Driver |
 | Object Pose | Perception | Custom/Course Concepts,algorithm | Estimates the ground-plane pose (x, y, yaw) of the target object from the segmented point cloud. | Mohammad |
 | Visual Odometry | Estimation | Custom/Library | Tracks visual features between frames to estimate robot motion relative to the environment. | Vikas |
 | EKF | Estimation | Library | Fuses IMU and visual odometry data to produce a filtered estimate of robot pose. | Vikas |
@@ -243,9 +243,4 @@ All safety triggers (deadman timeout, obstacle stop, sensor timeout, localizatio
 
 - **GitHub Page:** https://seasonedleo.github.io/RAS_Mobile_Robotics_Vision/
 - **GitHub Repository :** https://github.com/mohammadnsr1/MobileRobots_Active_Perception
-
-
-
-```
-
 ---
