@@ -127,7 +127,18 @@ flowchart LR
   IMU --> EKF
   VO --> EKF
   EKF --> NBV
-  OPE --> NBV
+
+  %% Estimation to planning
+  OPE --> CONF
+  CONF --> NBV
+  EKF --> NBV
+
+  %% Planning to actuation
+  NBV --> NAV2
+  NAV2 --> RC
+  LIDAR --> RC
+  RC --> DDC
+  DDC --> MHI
 
 ```
   
