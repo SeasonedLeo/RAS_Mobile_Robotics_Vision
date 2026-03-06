@@ -100,10 +100,21 @@ flowchart LR
     PCP[Point Cloud]
     OPE[Object Pose]
   end
-  
+
   subgraph RobotLocalization
     VO[Visual Odometry]
     EKF[EKF Fusion]
+  end
+  subgraph Planning
+    CONF[Confidence Evaluation]
+    NBV[Next Best View]
+    NAV2[Nav2 Global Planner]
+    RC[Reactive Controller]
+  end
+
+  subgraph Actuation
+    DDC[Diff Drive Controller]
+    MHI[Motor Hardware Interface]
   end
 
 ```
