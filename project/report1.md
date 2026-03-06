@@ -89,11 +89,7 @@ Using an active perception loop, the system will determine the next-best viewpoi
 
 ```mermaid
 flowchart LR
-  A[Perception] --> B[Estimation]
-  B --> C[Planning / Decision]
-  C --> D[Navigation / Actuation]
 
-  %% Perception
   subgraph P[Perception]
     RGBD[RGB-D Camera]
     LIDAR[LiDAR]
@@ -164,52 +160,7 @@ flowchart LR
   style ACT fill:#bff5bf,stroke:#333,stroke-width:1px
 ``` 
   
-<!-- ```mermaid
-flowchart LR
-  %% 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
 
-  subgraph P[Perception]
-    RGBD[RGB-D Camera]
-    LIDAR[LiDAR]
-    IMU[IMU]
-  end
-
-
-  subgraph OBJ[Object Perception Branch]
-    PCP[Point Cloud Processing]
-    OPE[Object Pose Estimation]
-    OBJ_CAM[Object Pose (camera frame)]
-  end
-
-
-
-  subgraph AP[Active Perception]
-    ALGO1[ALGO1]
-    ALGO2[ALGO2]
-  end
-
-  subgraph SF[Sensor Fusion]
-    ALGO1SF[ALGO1SF]
-    ALGO2SF[ALGO2SF]
-  end
-
-   subgraph EST[Estimation]
-    SLAM[SLAM Toolbox]
-    EKF[Robot Localization /EKF]
-  end
-
- 
-
-  subgraph PL[Planning]
-    NAV2[Nav2 Global Planner]
-    RC[Reactive Controller]
-    SFT[Safety & Operational Protocol]
-  end
-
-  subgraph A[Actuation]
-    DDC[Diff-Drive Controller]
-    MHI[Motor Hardware Interface]
-  end
 
 
 
