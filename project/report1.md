@@ -100,7 +100,6 @@ flowchart LR
     IMU[IMU]
   end
 
-  %% Estimation: two parallel branches
   subgraph OBJ[Object Perception Branch]
     PCP[Point Cloud Processing]
     OPE[Object Pose Estimation]
@@ -113,20 +112,19 @@ flowchart LR
     RPOSE[Robot Pose (local frame)]
   end
 
-  %% TF / transform frames
   subgraph TF[TF / Frames]
     TF_NODE[TF tree: camera -> base_link -> odom/map]
     OBJ_LOCAL[Object Pose (robot/local frame)]
   end
 
-  %% Planning / decision
+
   subgraph PL[Planning / Decision]
     CONF[Pose Confidence Evaluation]
     NBV[Next-Best-View Prediction]
     GOAL[Target Viewpoint Pose]
   end
 
-  %% Navigation / actuation
+
   subgraph ACT[Navigation / Actuation]
     NAV2[Nav2 Global Planner]
     REACT[Reactive Controller]
@@ -134,29 +132,25 @@ flowchart LR
     BASE[Robot Base]
   end
 
-  %% Object pose branch
   RGBD --> PCP --> OPE --> OBJ_CAM
 
-  %% Robot localization branch
   RGBD --> VO
   IMU --> EKF
   VO --> EKF --> RPOSE
 
-  %% TF fusion of object and robot pose
+
   OBJ_CAM --> TF_NODE
   RPOSE --> TF_NODE
   TF_NODE --> OBJ_LOCAL
 
-  %% Decision making
   OBJ_LOCAL --> CONF --> NBV
   RPOSE --> NBV --> GOAL
 
-  %% Navigation and obstacle avoidance
   GOAL --> NAV2 --> REACT --> DDC --> BASE
   LIDAR --> NAV2
   LIDAR --> REACT
 
-  %% Closed loop: motion leads to new observations
+ observations
   BASE --> RGBD
   BASE --> LIDAR
   BASE --> IMU
@@ -170,6 +164,56 @@ flowchart LR
   style ACT fill:#bff5bf,stroke:#333,stroke-width:1px
 ``` 
   
+<!-- ```mermaid
+flowchart LR
+  %% 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
+
+  subgraph P[Perception]
+    RGBD[RGB-D Camera]
+    LIDAR[LiDAR]
+    IMU[IMU]
+  end
+
+
+  subgraph OBJ[Object Perception Branch]
+    PCP[Point Cloud Processing]
+    OPE[Object Pose Estimation]
+    OBJ_CAM[Object Pose (camera frame)]
+  end
+
+
+
+  subgraph AP[Active Perception]
+    ALGO1[ALGO1]
+    ALGO2[ALGO2]
+  end
+
+  subgraph SF[Sensor Fusion]
+    ALGO1SF[ALGO1SF]
+    ALGO2SF[ALGO2SF]
+  end
+
+   subgraph EST[Estimation]
+    SLAM[SLAM Toolbox]
+    EKF[Robot Localization /EKF]
+  end
+
+ 
+
+  subgraph PL[Planning]
+    NAV2[Nav2 Global Planner]
+    RC[Reactive Controller]
+    SFT[Safety & Operational Protocol]
+  end
+
+  subgraph A[Actuation]
+    DDC[Diff-Drive Controller]
+    MHI[Motor Hardware Interface]
+  end
+
+
+
+
 
 
 
