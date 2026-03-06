@@ -91,67 +91,74 @@ Using an active perception loop, the system will determine the next-best viewpoi
 flowchart LR
 
   %% Perception
-  RGBD[RGB-D Camera]
-  LIDAR[LiDAR]
-  IMU[IMU]
+  subgraph P[Perception]
+    SENS1[LiDAR]
+    SENS4[IMU]
+    SENS2[RGB-D Camera]
+  end
 
-  %% Estimation
-  PCP[Point Cloud Processing]
-  OPE[Object Pose Estimation]
-  OBJCAM[Object Pose in Camera Frame]
+  %% Estimation (two parallel branches)
+  subgraph E[Estimation]
+    subgraph E1[Object Perception Branch]
+      PCP[Point Cloud Processing]
+      OPE[Object Pose Estimation (box/cylinder)]
+      OBJCAM[Object Pose (camera frame) (x, y, yaw)]
+      SENS2 --> PCP --> OPE --> OBJCAM
+    end
 
-  VO[Visual SLAM or Visual Odometry]
-  EKF[EKF Sensor Fusion]
-  RPOSE[Robot Pose in Local Frame]
+    subgraph E2[Robot Localization Branch]
+      VO[Visual SLAM / Visual Odometry]
+      EKF[EKF Sensor Fusion]
+      RPOSE[Robot Pose (local) (odom/map)]
+      SENS2 --> VO
+      SENS4 --> EKF
+      VO --> EKF --> RPOSE
+    end
+  end
 
-  TF[TF Transform Tree]
-  OBJLOCAL[Object Pose in Robot Local Frame]
+  %% TF transform tree connecting branches
+  subgraph T[TF / Frames]
+    TF[TF Transform Tree (camera -> base_link -> odom/map)]
+    OBJLOCAL[Object Pose (robot/local frame) (x, y, yaw)]
+    OBJCAM --> TF
+    RPOSE --> TF
+    TF --> OBJLOCAL
+  end
 
-  %% Planning
-  CONF[Pose Confidence Evaluation]
-  NBV[Next Best View Prediction]
-  GOAL[Target Viewpoint Pose]
+  %% Planning / Decision
+  subgraph PL[Planning / Decision]
+    CONF[Pose Confidence Evaluation]
+    NBV[Next-Best-View (NBV) Prediction]
+    GOAL[Target Viewpoint Pose]
+    OBJLOCAL --> CONF --> NBV
+    RPOSE --> NBV --> GOAL
+  end
 
-  %% Navigation and Actuation
-  NAV2[Nav2 Planner]
-  REACT[Reactive Controller]
-  DDC[Diff Drive Controller]
-  BASE[Robot Base]
+  %% Navigation / Actuation
+  subgraph A[Navigation / Actuation]
+    NAV2[Nav2 Global Planner]
+    REACT[Reactive Controller / Local Avoidance]
+    DDC[Diff Drive Controller]
+    BASE[Robot Base]
+    GOAL --> NAV2 --> REACT --> DDC --> BASE
+    %% LiDAR supports obstacle avoidance/costmaps (not object pose)
+    SENS1 --> NAV2
+    SENS1 --> REACT
+  end
 
-  %% Object pose branch
-  RGBD --> PCP
-  PCP --> OPE
-  OPE --> OBJCAM
+  %% Closed loop (new viewpoint -> new observations)
+  BASE --> SENS2
+  BASE --> SENS1
+  BASE --> SENS4
 
-  %% Robot localization branch
-  RGBD --> VO
-  IMU --> EKF
-  VO --> EKF
-  EKF --> RPOSE
-
-  %% Transform and fusion
-  OBJCAM --> TF
-  RPOSE --> TF
-  TF --> OBJLOCAL
-
-  %% Decision making
-  OBJLOCAL --> CONF
-  CONF --> NBV
-  RPOSE --> NBV
-  NBV --> GOAL
-
-  %% Navigation
-  GOAL --> NAV2
-  LIDAR --> NAV2
-  LIDAR --> REACT
-  NAV2 --> REACT
-  REACT --> DDC
-  DDC --> BASE
-
-  %% Closed loop
-  BASE --> RGBD
-  BASE --> LIDAR
-  BASE --> IMU
+  %% Subgraph colors
+  style P fill:#ffb3ff,stroke:#333,stroke-width:1px
+  style E fill:#f3e7c6,stroke:#333,stroke-width:1px
+  style E1 fill:#fff2cc,stroke:#333,stroke-width:1px
+  style E2 fill:#e6f7ff,stroke:#333,stroke-width:1px
+  style T fill:#e8e8ff,stroke:#333,stroke-width:1px
+  style PL fill:#bfc3ff,stroke:#333,stroke-width:1px
+  style A fill:#bff5bf,stroke:#333,stroke-width:1px
 ```
   
 
