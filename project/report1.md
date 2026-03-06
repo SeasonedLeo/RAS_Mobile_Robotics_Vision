@@ -120,7 +120,6 @@ flowchart LR
   %% Perception → Object perception
   RGBD --> PCP
   PCP --> OPE
-  OPE --> CONF
 
   %% Perception → Localization
   RGBD --> VO
@@ -139,6 +138,13 @@ flowchart LR
   LIDAR --> RC
   RC --> DDC
   DDC --> MHI
+
+  %% Styles
+  style Perception fill:#ffe6e6,stroke:#333,stroke-width:2px
+  style ObjectPerception fill:#fff2cc,stroke:#333,stroke-width:2px
+  style RobotLocalization fill:#fff2cc,stroke:#333,stroke-width:2px
+  style Planning fill:#e6e6ff,stroke:#333,stroke-width:2px
+  style Actuation fill:#d9f2d9,stroke:#333,stroke-width:2px
 
 ```
   
