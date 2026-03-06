@@ -89,77 +89,60 @@ Using an active perception loop, the system will determine the next-best viewpoi
 
 ```mermaid
 flowchart LR
+  A[Perception] --> B[Estimation]
+  B --> C[Planning]
+  C --> D[Actuation]
+```   
+  %% 3.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
 
-  %% Perception
   subgraph P[Perception]
     SENS1[LiDAR]
+    SENS3[Odometery]
     SENS4[IMU]
-    SENS2[RGB-D Camera]
+    SENS2[Depth Camera]
+
+
   end
 
-  %% Estimation (two parallel branches)
-  subgraph E[Estimation]
-    subgraph E1[Object Perception Branch]
-      PCP[Point Cloud Processing]
-      OPE[Object Pose Estimation (box/cylinder)]
-      OBJCAM[Object Pose (camera frame) (x, y, yaw)]
-      SENS2 --> PCP --> OPE --> OBJCAM
-    end
-
-    subgraph E2[Robot Localization Branch]
-      VO[Visual SLAM / Visual Odometry]
-      EKF[EKF Sensor Fusion]
-      RPOSE[Robot Pose (local) (odom/map)]
-      SENS2 --> VO
-      SENS4 --> EKF
-      VO --> EKF --> RPOSE
-    end
+ subgraph VO[Visual Odomerty]
+    ALGO1V[ALGO1V]
+    ALGO2V[ALGO2V]
   end
 
-  %% TF transform tree connecting branches
-  subgraph T[TF / Frames]
-    TF[TF Transform Tree (camera -> base_link -> odom/map)]
-    OBJLOCAL[Object Pose (robot/local frame) (x, y, yaw)]
-    OBJCAM --> TF
-    RPOSE --> TF
-    TF --> OBJLOCAL
+
+  subgraph AP[Active Perception]
+    ALGO1[ALGO1]
+    ALGO2[ALGO2]
   end
 
-  %% Planning / Decision
-  subgraph PL[Planning / Decision]
-    CONF[Pose Confidence Evaluation]
-    NBV[Next-Best-View (NBV) Prediction]
-    GOAL[Target Viewpoint Pose]
-    OBJLOCAL --> CONF --> NBV
-    RPOSE --> NBV --> GOAL
+   subgraph SF[Sensor Fusion]
+    ALGO1SF[ALGO1SF]
+    ALGO2SF[ALGO2SF]
   end
 
-  %% Navigation / Actuation
-  subgraph A[Navigation / Actuation]
-    NAV2[Nav2 Global Planner]
-    REACT[Reactive Controller / Local Avoidance]
-    DDC[Diff Drive Controller]
-    BASE[Robot Base]
-    GOAL --> NAV2 --> REACT --> DDC --> BASE
-    %% LiDAR supports obstacle avoidance/costmaps (not object pose)
-    SENS1 --> NAV2
-    SENS1 --> REACT
+  subgraph PL[Planning]
+    RC[Reactive Controller]
+    SFT[Safety & Operational Protocol]
   end
 
-  %% Closed loop (new viewpoint -> new observations)
-  BASE --> SENS2
-  BASE --> SENS1
-  BASE --> SENS4
+  subgraph A[Actuation]
+    DDC[Diff-Drive Controller]
+    MHI[Motor Hardware Interface]
+  end
 
-  %% Subgraph colors
-  style P fill:#ffb3ff,stroke:#333,stroke-width:1px
-  style E fill:#f3e7c6,stroke:#333,stroke-width:1px
-  style E1 fill:#fff2cc,stroke:#333,stroke-width:1px
-  style E2 fill:#e6f7ff,stroke:#333,stroke-width:1px
-  style T fill:#e8e8ff,stroke:#333,stroke-width:1px
-  style PL fill:#bfc3ff,stroke:#333,stroke-width:1px
-  style A fill:#bff5bf,stroke:#333,stroke-width:1px
-```
+  %% Main pipeline
+  SENS2-->AP
+  SENS2 --> VO
+  SENS1 --> SF
+  SENS2 --> SF
+  SENS1 --> SFT--> DDC
+  SENS3 -->SFT
+
+  RC --> DDC --> MHI
+
+  %% Fast obstacle feedback
+  SENS1 -. "Fast Obstacle Feedback" .-> RC
+``` 
   
 
 
