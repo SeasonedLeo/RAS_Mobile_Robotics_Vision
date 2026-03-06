@@ -176,31 +176,54 @@ flowchart LR
 
 ### 4.1 Library Modules
 
-**RGB-D driver (e.g., RealSense)**  
+**RGB-D Camera Driver**  
+This module provides synchronized RGB images and depth measurements from the TurtleBot4 camera. The depth stream is used to generate point clouds for object localization while RGB images support visual odometry.
+
+**LiDAR Driver**  
+This module publishes laser scan data used for obstacle detection and local navigation. The LiDAR measurements are used by the reactive controller and the Nav2 stack to detect obstacles and maintain safe navigation.
+
+**IMU Driver**  
+This module provides inertial measurements including angular velocity and linear acceleration. These measurements are fused with visual odometry in the EKF to produce a stable estimate of the robot’s motion.
+
+**EKF**  
+This module fuses IMU measurements and visual odometry to produce a filtered estimate of the robot’s pose. The resulting state estimate improves localization stability for navigation and planning.
+
+**Nav2 Global Planner**  
+This module computes a collision-free path from the robot’s current pose to the desired viewpoint goal. It uses the global map and costmaps to generate safe navigation routes.
+
+**Reactive Controller (Nav2 Local Planner)**  
+This module tracks the planned path while reacting to nearby obstacles using LiDAR data. It generates real-time velocity commands that safely guide the robot along the planned trajectory.
+
+**Diff Drive Controller (ROS2 Control)**  
+This controller converts velocity commands into wheel commands for the TurtleBot4 differential drive system. It ensures that motion commands are correctly translated into left and right wheel velocities.
+
+**Motor Hardware Interface (ROS2 Control)**  
+This module interfaces the ROS2 control framework with the TurtleBot4 motor hardware. It sends the wheel commands to the motors and reads back hardware state information. 
  
 
 
 
 
 ---
-
 ### 4.2 Custom Modules
 
 #### 4.2.1 Active Perception
 
-**Object pose estimation from RGB-D (ground-plane x, y, yaw)**  
+**Object Pose Estimation from RGB-D (ground-plane x, y, yaw)**  
+This module estimates the ground-plane pose of the target object using RGB-D point cloud data. The algorithm follows the point cloud processing pipeline introduced in the course: voxel grid filtering to downsample the cloud, RANSAC plane segmentation to remove the floor, and Euclidean clustering to isolate the object. The centroid of the resulting cluster is used to compute the object’s planar position (x, y), while the dominant orientation of the cluster is used to estimate the yaw angle.
 
+**Confidence Scoring / Stability Filtering**  
+This module evaluates the reliability of the estimated object pose across multiple observations. The system computes a confidence score based on pose stability over time, such as variance in estimated position and orientation between frames. If the pose estimates converge and remain consistent across several viewpoints, the confidence increases; otherwise, additional viewpoints are requested.
 
-**Confidence scoring / stability filtering**  
+**Next-Best-View (NBV) Viewpoint Selection Policy**  
+This module determines where the robot should move next to improve object pose estimation. The intended implementation will explore next-best-view strategies from active perception literature to select viewpoints that reduce pose uncertainty. If a suitable method is not identified, a fallback strategy will sample candidate viewpoints around the object and navigate to them sequentially until the confidence score exceeds a predefined threshold.
 
+**Goal Update Gating / Replanning Trigger**  
+This module monitors the confidence score of the object pose estimate and determines when navigation goals should be updated. If the confidence is below the desired threshold, the module triggers the next-best-view planner to generate a new viewpoint goal.
 
-**NBV viewpoint selection policy**  
+#### 4.2.2 Visual Odometry
 
-
-**Goal update gating / replanning trigger**  
-
-#### 4.2.2 Visual Odometery
-
+(To be implemented and documented by team member responsible for localization.)
 
 
 ---
