@@ -103,7 +103,7 @@ flowchart LR
 
   subgraph RobotLocalization
     VO[Visual Odometry]
-    EKF[EKF Fusion]
+    EKF[EKF]
   end
   subgraph Planning
     CONF[Confidence Evaluation]
@@ -120,13 +120,14 @@ flowchart LR
   %% Perception → Object perception
   RGBD --> PCP
   PCP --> OPE
-  OPE --> OBJ_CAM
+  OPE --> CONF
 
   %% Perception → Localization
   RGBD --> VO
   IMU --> EKF
   VO --> EKF
-  EKF --> RPOSE
+  EKF --> NBV
+  OPE --> NBV
 
 ```
   
