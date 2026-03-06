@@ -127,37 +127,7 @@ flowchart LR
     DDC[Diff Drive Controller]
     BASE[Robot Base]
   end
-
-  RGBD --> PCP --> OPE --> OBJ_CAM
-
-  RGBD --> VO
-  IMU --> EKF
-  VO --> EKF --> RPOSE
-
-
-  OBJ_CAM --> TF_NODE
-  RPOSE --> TF_NODE
-  TF_NODE --> OBJ_LOCAL
-
-  OBJ_LOCAL --> CONF --> NBV
-  RPOSE --> NBV --> GOAL
-
-  GOAL --> NAV2 --> REACT --> DDC --> BASE
-  LIDAR --> NAV2
-  LIDAR --> REACT
-
- observations
-  BASE --> RGBD
-  BASE --> LIDAR
-  BASE --> IMU
-
-  %% Subgraph colors
-  style P fill:#ffb3ff,stroke:#333,stroke-width:1px
-  style OBJ fill:#fff2cc,stroke:#333,stroke-width:1px
-  style LOC fill:#e6f7ff,stroke:#333,stroke-width:1px
-  style TF fill:#e8e8ff,stroke:#333,stroke-width:1px
-  style PL fill:#bfc3ff,stroke:#333,stroke-width:1px
-  style ACT fill:#bff5bf,stroke:#333,stroke-width:1px
+  
 ``` 
   
 
