@@ -99,8 +99,13 @@ flowchart LR
   subgraph ObjectPerception
     PCP[Point Cloud]
     OPE[Object Pose]
-    OBJ_CAM[Camera Pose]
   end
+  
+  subgraph RobotLocalization
+    VO[Visual Odometry]
+    EKF[EKF Fusion]
+  end
+
 ```
   
 
