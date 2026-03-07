@@ -47,7 +47,7 @@ flowchart LR
   RGBD --> VO
   IMU --> EKF
   VO --> EKF
-  EKF --> NBV
+  
 
   %% Estimation to planning
   OPE --> CONF
