@@ -8,7 +8,7 @@ nav_order: 1
 # Report 1: Active Perception for Accurate Object Localization and Navigation
 {: .no_toc }
 
-**Robot:** TurtleBot4 · **Stack:** ROS 2, Nav2, RGB-D perception, next-best-view (NBV)
+**Robot:** TurtleBot4 · **Stack:** ROS 2, Nav2,Visual odometry ,  RGB-D perception, next-best-view (NBV)
 
 ---
 
