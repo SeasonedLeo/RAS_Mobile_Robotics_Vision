@@ -64,19 +64,6 @@ $$
 
 Short explanation placeholder: Describe how the continuous or nominal model is converted into the update form used in code.
 
-### 1.4 Assumptions and Simplifications
-
-<!-- TODO: List modeling assumptions and note where they may break down in hardware or simulation. -->
-<!-- TODO: Explain which effects are neglected and why that is acceptable for Milestone 2. -->
-
-**Placeholder guidance:** Document assumptions such as planar motion, no-slip behavior, synchronous control updates, or ideal actuator response.
-
-$$
-\text{TODO: Insert any reduced-form model, constraint equation, or simplifying assumption if needed.}
-$$
-
-Short explanation placeholder: State the assumptions clearly and note any expected impact on experimental validity.
-
 ---
 
 ## 2. System Architecture
@@ -200,21 +187,6 @@ This section validates behavior under realistic conditions and documents robustn
 - Calibration observations: [TODO: Note what improved or remained problematic after calibration.]
 - Tuning changes made due to noise: [TODO: Document filtering, thresholds, or parameter updates.]
 
-#### 3.1.2 Simulation Noise Injector
-
-<!-- TODO: Show how synthetic noise is injected into simulation data. -->
-<!-- TODO: Explain why the chosen noise model is representative of expected uncertainty. -->
-
-**Placeholder guidance:** Explain the logic of the noise injector node and include a concise code snippet showing how noise is applied in simulation.
-
-```python
-# TODO: Insert a minimal code snippet for the simulation noise injector.
-# Example placeholder:
-# def inject_noise(measurement):
-#     return measurement + sample_noise_model(...)
-```
-
-Short explanation placeholder: Describe where the noise is injected, what distribution or perturbation model is used, and which signals are affected.
 
 ### 3.2 Run-Time Issues
 
