@@ -36,7 +36,7 @@ $$
 \text{TODO: Insert robot motion model equation(s), e.g., } \dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})
 $$
 
-Short explanation placeholder: Briefly explain what each state variable and model term represents, and why this model is appropriate for the platform.
+**Short explanation placeholder:** Briefly explain what each state variable and model term represents, and why this model is appropriate for the platform.
 
 ### 1.2 Control Inputs
 
@@ -49,7 +49,7 @@ $$
 \text{TODO: Insert control input definition, e.g., } \mathbf{u} = [u_1, u_2]^\top
 $$
 
-Short explanation placeholder: Clarify whether the implementation uses linear/angular velocity, wheel velocities, or another control representation.
+**Short explanation placeholder:** Clarify whether the implementation uses linear/angular velocity, wheel velocities, or another control representation.
 
 ### 1.3 State Update Equations
 
@@ -62,13 +62,14 @@ $$
 \text{TODO: Insert discrete-time update equation(s), e.g., } \mathbf{x}_{k+1} = f(\mathbf{x}_k, \mathbf{u}_k, \Delta t)
 $$
 
-Short explanation placeholder: Describe how the continuous or nominal model is converted into the update form used in code.
+**Short explanation placeholder:** Describe how the continuous or nominal model is converted into the update form used in code.
 
 ---
 
 ## 2. System Architecture
 
-This section provides the full computational map and module breakdown of the ROS 2 system.
+This section describes the functional modules that compose the active perception pipeline. Each module is responsible for a specific stage of object detection, pose estimation, viewpoint planning, and navigation. The system is organized as a ROS 2 network where perception nodes stream observations, decision modules operate on demand, and an orchestrator manages the active perception loop.
+
 
 ### 2.1 Detailed Computational Map
 
@@ -87,7 +88,7 @@ flowchart LR
   C -->|/action_name [action_type]| D[TODO: Action Server]
 ```
 
-Short explanation placeholder: Summarize the major data pathways and identify the most important interfaces in the system.
+**Short explanation placeholder:** Summarize the major data pathways and identify the most important interfaces in the system.
 
 #### 2.1.2 rqt_graph Export
 
@@ -98,7 +99,7 @@ Short explanation placeholder: Summarize the major data pathways and identify th
 
 `[TODO: Insert rqt_graph image or screenshot here]`
 
-Short explanation placeholder: Briefly describe what the exported graph confirms about the live ROS 2 computation graph.
+**Short explanation placeholder:** Briefly describe what the exported graph confirms about the live ROS 2 computation graph.
 
 #### 2.1.3 Annotated Communication Notes
 
@@ -107,7 +108,7 @@ Short explanation placeholder: Briefly describe what the exported graph confirms
 
 **Placeholder guidance:** Use this subsection if the raw computational graph needs clarification for reviewers.
 
-Short explanation placeholder: Explain any non-obvious communication paths, launch-time remappings, or auxiliary library nodes.
+**Short explanation placeholder:** Explain any non-obvious communication paths, launch-time remappings, or auxiliary library nodes.
 
 ### 2.2 Module Descriptions
 
@@ -115,8 +116,7 @@ This subsection must explain every node shown in the computational map.
 
 #### 2.2.1 Module Declaration Table
 
-<!-- TODO: Add one row per node/module shown in the computational map. -->
-<!-- TODO: Distinguish clearly between custom code and third-party/library components. -->
+
 
 | Module | Type (Custom/Library) | Inputs | Outputs | Key Parameters | Status | Source File | Notes/Changes from M1 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -125,40 +125,147 @@ This subsection must explain every node shown in the computational map.
 
 #### 2.2.2 Custom Node Logic Flow
 
-<!-- TODO: Duplicate the following template for each custom node in the final system. -->
-<!-- TODO: Keep the node names consistent with the computational map and source tree. -->
+##### Node: cylinder_finder
 
-##### Node: [Node Name]
+**Purpose:** Detect cylindrical objects from RGB-D data and publish a segmented point cloud corresponding to the target object.
 
-Purpose: [TODO: Describe the node's technical role.]
+**Inputs:**
+- Subscribed topic: RGB-D point cloud `/oadk/points/`
 
-Inputs: [TODO: List subscribed topics, service requests, action goals, parameters, or timers.]
+**Outputs:**
+- Published topic: segmented object point cloud
+- Published topic: detection flag
 
-Outputs: [TODO: List published topics, service responses, action results, or transforms.]
+**Internal logic flow:**
+1. Subscribe to the incoming RGB-D point cloud.
+2. Apply filtering to remove background noise.
+3. Segment cylindrical geometry from the scene.
+4. Extract the object-specific point cloud.
+5. Publish the segmented cloud.
+6. Publish the detection status.
 
-Internal logic flow: [TODO: Summarize the execution pipeline, callbacks, and key processing steps.]
+**Key parameters:** `depth_range`, `segmentation_threshold`, `min_cluster_size`, `target_radius_tolerance`
 
-Key parameters: [TODO: List tunable parameters and their effect on behavior.]
+**Source file link:** [TODO: Add source file path](../path/to/cylinder_finder)
 
-Source file link: [TODO: Add source file path](../path/to/source_file)
+**Status:** Implemented
 
-Status: [TODO: e.g., implemented, partially validated, pending integration.]
+##### Node: pose_estimator
 
-##### Node: [Node Name]
+**Purpose:** Compute object pose from the segmented point cloud and transform it from the camera optical frame to the `odom` frame.
 
-Purpose: [TODO: Describe the node's technical role.]
+**Inputs:**
+- Subscribed topic: segmented object point cloud
+- TF transform: `camera_optical_frame -> base_link -> odom`
 
-Inputs: [TODO: List subscribed topics, service requests, action goals, parameters, or timers.]
+**Outputs:**
+- Published topic: object pose in camera optical frame
+- Published topic: object pose in `odom` frame
 
-Outputs: [TODO: List published topics, service responses, action results, or transforms.]
+**Internal logic flow:**
+1. Receive the segmented object point cloud.
+2. Compute the centroid of the object points.
+3. Apply PCA to estimate the dominant axis.
+4. Compute yaw from the principal direction.
+5. Construct the pose in the camera optical frame.
+6. Transform the pose to the `odom` frame using TF.
+7. Publish the pose estimates.
 
-Internal logic flow: [TODO: Summarize the execution pipeline, callbacks, and key processing steps.]
+**Key parameters:**
+- `pca_eigenvalue_threshold`
+- `minimum_point_count`
+- `pose_smoothing_window_size`
 
-Key parameters: [TODO: List tunable parameters and their effect on behavior.]
+**Source file link:** [../src/pose_estimator.py](../src/pose_estimator.py)
 
-Source file link: [TODO: Add source file path](../path/to/source_file)
+**Status:** Implemented
 
-Status: [TODO: e.g., implemented, partially validated, pending integration.]
+##### Node: pose_evaluator
+
+**Purpose:** Evaluate the reliability of pose estimates over time and compute a confidence score.
+
+**Inputs:**
+- Subscribed topic: object pose in `odom` frame
+
+**Outputs:**
+- Service response: confidence score
+- Service response: NBV required flag
+
+**Internal logic flow:**
+1. Store incoming pose estimates in a sliding window.
+2. Compute variance in position and orientation.
+3. Evaluate convergence criteria.
+4. Compute a confidence score.
+5. Return the evaluation result via service.
+
+**Key parameters:**
+- `sliding_window_size`
+- `confidence_threshold`
+- `variance_threshold`
+
+**Source file link:** [../src/pose_evaluator.py](../src/pose_evaluator.py)
+
+**Status:** Planned
+
+##### Node: nbv_planner
+
+**Purpose:** Generate the next best viewpoint using a utility-based sampling strategy around the object.
+
+**Inputs:**
+- Service request: object pose in `odom` frame
+- Service request: confidence score
+- TF: robot pose in `odom` frame
+
+**Outputs:**
+- Service response: next goal pose in `odom` frame
+
+**Internal logic flow:**
+1. Generate candidate viewpoints on a circle around the object.
+2. Evaluate candidates using a utility function.
+3. Select the best candidate.
+4. Convert the selected candidate to a navigation goal pose.
+5. Return the goal pose.
+
+**Key parameters:**
+- `sampling_radius`
+- `number_of_candidate_viewpoints`
+- `utility_weights`
+
+**Source file link:** [../src/nbv_planner.py](../src/nbv_planner.py)
+
+**Status:** Planned
+
+##### Node: orchestrator
+
+**Purpose:** Manage the active perception loop and coordinate perception, evaluation, and navigation.
+
+**Inputs:**
+- Service response: confidence score
+- Navigation status from Nav2
+- Subscribed topic: object pose
+
+**Outputs:**
+- Service call: pose evaluation
+- Service call: NBV planner
+- Action goal: Nav2 navigation
+
+**Internal logic flow:**
+1. Wait for the initial pose estimate.
+2. Request pose evaluation.
+3. If confidence is low, request NBV planning.
+4. Send the goal to Nav2.
+5. Wait for navigation completion.
+6. Trigger re-observation.
+7. Repeat until the confidence threshold is reached.
+
+**Key parameters:**
+- `confidence_threshold`
+- `maximum_iterations`
+- `re_observation_delay`
+
+**Source file link:** [../src/orchestrator.py](../src/orchestrator.py)
+
+**Status:** Planned
 
 #### 2.2.3 Library Node Configuration
 
@@ -167,7 +274,7 @@ Status: [TODO: e.g., implemented, partially validated, pending integration.]
 
 **Placeholder guidance:** Document tuned parameters for library-managed components such as update frequency, inflation radius, controller frequency, costmap settings, sensor frame configuration, or filter gains.
 
-Short explanation placeholder: Explain which library parameters were tuned, why they mattered, and how configuration changed relative to the Milestone 1 plan.
+**Short explanation placeholder:** Explain which library parameters were tuned, why they mattered, and how configuration changed relative to the Milestone 1 plan.
 
 ---
 
@@ -196,19 +303,19 @@ This section validates behavior under realistic conditions and documents robustn
 
 <!-- TODO: List representative failure cases encountered during testing. -->
 
-Short explanation placeholder: Describe the most important failure modes observed during execution without overstating conclusions.
+**Short explanation placeholder:** Describe the most important failure modes observed during execution without overstating conclusions.
 
 #### 3.2.2 Recovery / Mitigation Logic
 
 <!-- TODO: Explain the logic used to detect, recover from, or reduce failures. -->
 
-Short explanation placeholder: Summarize the implemented safeguards, fallback behavior, or operator interventions used during testing.
+**Short explanation placeholder:** Summarize the implemented safeguards, fallback behavior, or operator interventions used during testing.
 
 #### 3.2.3 Remaining Limitations
 
 <!-- TODO: Document current limitations that remain unresolved at Milestone 2. -->
 
-Short explanation placeholder: Identify the known technical gaps that still affect robustness, performance, or completeness.
+**Short explanation placeholder:** Identify the known technical gaps that still affect robustness, performance, or completeness.
 
 ### 3.3 Milestone Video
 
@@ -253,16 +360,16 @@ This closing section should summarize current implementation progress and clearl
 
 <!-- TODO: Summarize the subsystems that are currently functional and demonstrated. -->
 
-Short explanation placeholder: Briefly state which components are operational as of this milestone checkpoint.
+**Short explanation placeholder:** Briefly state which components are operational as of this milestone checkpoint.
 
 ### 5.2 What Is Still Pending
 
 <!-- TODO: List the highest-priority incomplete items that remain before Milestone 3. -->
 
-Short explanation placeholder: Identify the major unfinished items, validation gaps, or integrations still in progress.
+**Short explanation placeholder:** Identify the major unfinished items, validation gaps, or integrations still in progress.
 
 ### 5.3 Next Steps Toward Milestone 3
 
 <!-- TODO: Convert remaining technical work into concrete next steps for the final milestone. -->
 
-Short explanation placeholder: Outline the immediate engineering priorities, validation work, and deliverables leading into Milestone 3.
+**Short explanation placeholder:** Outline the immediate engineering priorities, validation work, and deliverables leading into Milestone 3.
