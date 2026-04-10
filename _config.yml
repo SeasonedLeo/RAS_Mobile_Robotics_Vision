@@ -1,10 +1,9 @@
-title: RAS598: Active Perception
+title: "RAS598: Active Perception"
 description: ""
+theme: just-the-docs
 
-url: https://just-the-docs.github.io
-
-remote_theme: just-the-docs/just-the-docs
-math: mathjax
+url: "https://seasonedleo.github.io"
+baseurl: "/RAS_Mobile_Robotics_Vision"
 
 aux_links: {}
 
