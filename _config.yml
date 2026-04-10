@@ -1,14 +1,12 @@
-title: Just the Docs Template
-description: A starter template for a Jeykll site using the Just the Docs theme!
-theme: just-the-docs
-
-url: https://just-the-docs.github.io
-
+title: RAS598: Active Perception
+description: Active perception for accurate object localization and navigation using TurtleBot4 and RGB-D sensing.
 remote_theme: just-the-docs/just-the-docs
 math: mathjax
 
-aux_links:
-  Template Repository: https://github.com/just-the-docs/just-the-docs-template
+url: https://seasonedleo.github.io
+baseurl: /RAS_Mobile_Robotics_Vision
+
+aux_links: {}
 
 mermaid:
   version: "10.0.0"
