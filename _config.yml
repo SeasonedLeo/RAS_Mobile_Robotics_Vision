@@ -1,10 +1,10 @@
 title: RAS598: Active Perception
-description: Active perception for accurate object localization and navigation using TurtleBot4 and RGB-D sensing.
-remote_theme: just-the-docs/just-the-docs
-math: mathjax
+description: ""
 
-url: https://seasonedleo.github.io
-baseurl: /RAS_Mobile_Robotics_Vision
+url: {}
+
+remote_theme: {}
+math: mathjax
 
 aux_links: {}
 
