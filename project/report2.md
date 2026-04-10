@@ -114,7 +114,7 @@ flowchart LR
 
 This subsection must explain every node shown in the computational map.
 
-#### 2.2.1 Module Declaration Table
+###**2.2.1 Module Declaration Table**
 
 
 
