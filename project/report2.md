@@ -125,7 +125,7 @@ This subsection must explain every node shown in the computational map.
 
 ### 2.2.2 Custom Node Logic Flow
 
-### cylinder_finder
+### 1- cylinder_finder
 
 **Purpose:** Detect cylindrical objects from RGB-D data and publish a segmented point cloud corresponding to the target object.  
 
@@ -142,7 +142,7 @@ This subsection must explain every node shown in the computational map.
 **Status:** Implemented  
 
 
-### pose_estimator
+### 2- pose_estimator
 
 **Purpose:** Compute object pose from segmented point cloud and transform it from the camera optical frame to the `odom` frame.  
 
@@ -159,7 +159,7 @@ This subsection must explain every node shown in the computational map.
 **Status:** Implemented  
 
 
-### confidence_evaluator
+### 3- confidence_evaluator
 
 **Purpose:** Evaluate the consistency of repeated pose estimates and compute a confidence score used to determine whether another viewpoint is required.  
 
@@ -176,7 +176,7 @@ This subsection must explain every node shown in the computational map.
 **Status:** Planned  
 
 
-### nbv_planner
+### 4- nbv_planner
 
 **Purpose:** Generate the next best viewpoint using utility-based sampling around the estimated object pose.  
 
@@ -193,7 +193,7 @@ This subsection must explain every node shown in the computational map.
 **Status:** Planned  
 
 
-### orchestrator
+### 5- orchestrator
 
 **Purpose:** Coordinate the active perception loop by collecting pose estimates, calling confidence evaluation, requesting a new viewpoint when needed, and sending navigation goals to Nav2.  
 
