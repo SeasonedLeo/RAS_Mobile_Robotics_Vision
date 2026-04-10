@@ -1,9 +1,7 @@
 title: RAS598: Active Perception
 description: ""
 
-url: {}
-
-remote_theme: {}
+remote_theme: just-the-docs/just-the-docs
 math: mathjax
 
 aux_links: {}
