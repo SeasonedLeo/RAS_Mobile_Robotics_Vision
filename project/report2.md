@@ -114,7 +114,7 @@ flowchart LR
 
 This subsection must explain every node shown in the computational map.
 
-###**2.2.1 Module Declaration Table**
+### 2.2.1 Module Declaration Table
 
 
 
@@ -123,149 +123,91 @@ This subsection must explain every node shown in the computational map.
 | `[Module Name]` | `Custom` or `Library` | `[input topics/services/actions]` | `[output topics/services/actions]` | `[param_a, param_b]` | `[implemented / in progress / planned]` | `[path/to/source_file](../path/to/source_file)` | `[brief change summary]` |
 | `[Module Name]` | `Custom` or `Library` | `[input topics/services/actions]` | `[output topics/services/actions]` | `[param_a, param_b]` | `[implemented / in progress / planned]` | `[path/to/source_file](../path/to/source_file)` | `[brief change summary]` |
 
-#### 2.2.2 Custom Node Logic Flow
+### 2.2.2 Custom Node Logic Flow
 
-##### Node: cylinder_finder
+### cylinder_finder
 
-**Purpose:** Detect cylindrical objects from RGB-D data and publish a segmented point cloud corresponding to the target object.
+**Purpose:** Detect cylindrical objects from RGB-D data and publish a segmented point cloud corresponding to the target object.  
 
-**Inputs:**
-- Subscribed topic: RGB-D point cloud `/oadk/points/`
+**Inputs:** RGB-D point cloud `/robot_10/oakd/points`  
 
-**Outputs:**
-- Published topic: segmented object point cloud
-- Published topic: detection flag
+**Outputs:** Segmented object point cloud, detection flag  
 
-**Internal logic flow:**
-1. Subscribe to the incoming RGB-D point cloud.
-2. Apply filtering to remove background noise.
-3. Segment cylindrical geometry from the scene.
-4. Extract the object-specific point cloud.
-5. Publish the segmented cloud.
-6. Publish the detection status.
+**Internal logic flow:** Subscribe to point cloud → filter noise → segment cylindrical geometry → extract object cloud → publish segmentation and detection status  
 
-**Key parameters:** `depth_range`, `segmentation_threshold`, `min_cluster_size`, `target_radius_tolerance`
+**Key parameters:** `depth_range`, `segmentation_threshold`, `min_cluster_size`, `target_radius_tolerance`  
 
-**Source file link:** [TODO: Add source file path](../path/to/cylinder_finder)
+**Source file link:** [TODO: Add source file path](../path/to/cylinder_finder)  
 
-**Status:** Implemented
+**Status:** Implemented  
 
-##### Node: pose_estimator
 
-**Purpose:** Compute object pose from the segmented point cloud and transform it from the camera optical frame to the `odom` frame.
+### pose_estimator
 
-**Inputs:**
-- Subscribed topic: segmented object point cloud
-- TF transform: `camera_optical_frame -> base_link -> odom`
+**Purpose:** Compute object pose from segmented point cloud and transform it from the camera optical frame to the `odom` frame.  
 
-**Outputs:**
-- Published topic: object pose in camera optical frame
-- Published topic: object pose in `odom` frame
+**Inputs:** Segmented object point cloud, TF `camera_optical_frame → base_link → odom`  
 
-**Internal logic flow:**
-1. Receive the segmented object point cloud.
-2. Compute the centroid of the object points.
-3. Apply PCA to estimate the dominant axis.
-4. Compute yaw from the principal direction.
-5. Construct the pose in the camera optical frame.
-6. Transform the pose to the `odom` frame using TF.
-7. Publish the pose estimates.
+**Outputs:** Object pose in camera frame, object pose in `odom` frame  
 
-**Key parameters:**
-- `pca_eigenvalue_threshold`
-- `minimum_point_count`
-- `pose_smoothing_window_size`
+**Internal logic flow:** Receive cloud → compute centroid → apply PCA → estimate yaw → construct pose in camera frame → transform to `odom` → publish pose  
 
-**Source file link:** [../src/pose_estimator.py](../src/pose_estimator.py)
+**Key parameters:** `pca_eigenvalue_threshold`, `minimum_point_count`, `pose_smoothing_window_size`  
 
-**Status:** Implemented
+**Source file link:** [../src/pose_estimator.py](../src/pose_estimator.py)  
 
-##### Node: pose_evaluator
+**Status:** Implemented  
 
-**Purpose:** Evaluate the reliability of pose estimates over time and compute a confidence score.
 
-**Inputs:**
-- Subscribed topic: object pose in `odom` frame
+### confidence_evaluator
 
-**Outputs:**
-- Service response: confidence score
-- Service response: NBV required flag
+**Purpose:** Evaluate the consistency of repeated pose estimates and compute a confidence score used to determine whether another viewpoint is required.  
 
-**Internal logic flow:**
-1. Store incoming pose estimates in a sliding window.
-2. Compute variance in position and orientation.
-3. Evaluate convergence criteria.
-4. Compute a confidence score.
-5. Return the evaluation result via service.
+**Inputs:** Service request containing a batch or window of object poses in `odom` frame  
 
-**Key parameters:**
-- `sliding_window_size`
-- `confidence_threshold`
-- `variance_threshold`
+**Outputs:** Service response containing confidence score and NBV-required flag  
 
-**Source file link:** [../src/pose_evaluator.py](../src/pose_evaluator.py)
+**Internal logic flow:** Receive a set of recent pose estimates → compute consistency metrics over position and orientation → evaluate convergence against thresholds → compute confidence score → return confidence score and NBV decision  
 
-**Status:** Planned
+**Key parameters:** `window_size`, `confidence_threshold`, `position_variance_threshold`, `orientation_variance_threshold`  
 
-##### Node: nbv_planner
+**Source file link:** [../src/confidence_evaluator.py](../src/confidence_evaluator.py)  
 
-**Purpose:** Generate the next best viewpoint using a utility-based sampling strategy around the object.
+**Status:** Planned  
 
-**Inputs:**
-- Service request: object pose in `odom` frame
-- Service request: confidence score
-- TF: robot pose in `odom` frame
 
-**Outputs:**
-- Service response: next goal pose in `odom` frame
+### nbv_planner
 
-**Internal logic flow:**
-1. Generate candidate viewpoints on a circle around the object.
-2. Evaluate candidates using a utility function.
-3. Select the best candidate.
-4. Convert the selected candidate to a navigation goal pose.
-5. Return the goal pose.
+**Purpose:** Generate the next best viewpoint using utility-based sampling around the estimated object pose.  
 
-**Key parameters:**
-- `sampling_radius`
-- `number_of_candidate_viewpoints`
-- `utility_weights`
+**Inputs:** Service request containing object pose in `odom`, confidence score, and robot pose in `odom`  
 
-**Source file link:** [../src/nbv_planner.py](../src/nbv_planner.py)
+**Outputs:** Service response containing next goal pose in `odom`  
 
-**Status:** Planned
+**Internal logic flow:** Sample candidate viewpoints around object → evaluate each candidate using utility function → select highest-utility viewpoint → convert selected candidate to goal pose in `odom` → return goal pose  
 
-##### Node: orchestrator
+**Key parameters:** `sampling_radius`, `num_candidates`, `utility_weights`  
 
-**Purpose:** Manage the active perception loop and coordinate perception, evaluation, and navigation.
+**Source file link:** [../src/nbv_planner.py](../src/nbv_planner.py)  
 
-**Inputs:**
-- Service response: confidence score
-- Navigation status from Nav2
-- Subscribed topic: object pose
+**Status:** Planned  
 
-**Outputs:**
-- Service call: pose evaluation
-- Service call: NBV planner
-- Action goal: Nav2 navigation
 
-**Internal logic flow:**
-1. Wait for the initial pose estimate.
-2. Request pose evaluation.
-3. If confidence is low, request NBV planning.
-4. Send the goal to Nav2.
-5. Wait for navigation completion.
-6. Trigger re-observation.
-7. Repeat until the confidence threshold is reached.
+### orchestrator
 
-**Key parameters:**
-- `confidence_threshold`
-- `maximum_iterations`
-- `re_observation_delay`
+**Purpose:** Coordinate the active perception loop by collecting pose estimates, calling confidence evaluation, requesting a new viewpoint when needed, and sending navigation goals to Nav2.  
 
-**Source file link:** [../src/orchestrator.py](../src/orchestrator.py)
+**Inputs:** Object poses from `pose_estimator`, navigation status from Nav2  
 
-**Status:** Planned
+**Outputs:** Service request to `confidence_evaluator`, service request to `nbv_planner`, navigation goal to Nav2  
+
+**Internal logic flow:** Subscribe to pose estimates from `pose_estimator` → store a fixed window of recent poses → call `confidence_evaluator` service to assess consistency and compute confidence → if confidence is above threshold and NBV flag is false, terminate loop → otherwise call `nbv_planner` service to request a new goal in `odom` → send goal to Nav2 → wait for navigation result → repeat observation and evaluation loop until convergence  
+
+**Key parameters:** `pose_window_size`, `confidence_threshold`, `max_iterations`, `reobserve_delay`  
+
+**Source file link:** [../src/orchestrator.py](../src/orchestrator.py)  
+
+**Status:** Planned   
 
 #### 2.2.3 Library Node Configuration
 
