@@ -83,9 +83,63 @@ This section describes the functional modules that compose the active perception
 
 ```mermaid
 flowchart LR
-  A[TODO: Node A] -->|/topic_name [msg_type]| B[TODO: Node B]
-  B -->|/service_name [srv_type]| C[TODO: Service or Action Client]
-  C -->|/action_name [action_type]| D[TODO: Action Server]
+
+  subgraph Perception
+    RGBD[RGBD Camera]
+    LIDAR[LiDAR]
+    IMU[IMU]
+  end
+
+  subgraph ObjectPerception
+    PCP[Point Cloud]
+    OPE[Object Pose]
+  end
+
+  subgraph RobotLocalization
+    VO[Visual Odometry]
+    EKF[EKF]
+  end
+  subgraph Planning
+    CONF[Confidence Evaluation]
+    NBV[Next Best View]
+    NAV2[Nav2 Global Planner]
+    RC[Reactive Controller]
+  end
+
+  subgraph Actuation
+    DDC[Diff Drive Controller]
+    MHI[Motor Hardware Interface]
+  end
+
+  %% Perception → Object perception
+  RGBD --> PCP
+  PCP --> OPE
+
+  %% Perception → Localization
+  RGBD --> VO
+  IMU --> EKF
+  VO --> EKF
+  
+
+  %% Estimation to planning
+  OPE --> CONF
+  CONF --> NBV
+  EKF --> NBV
+
+  %% Planning to actuation
+  NBV --> NAV2
+  NAV2 --> RC
+  LIDAR --> RC
+  RC --> DDC
+  DDC --> MHI
+
+  %% Styles
+  style Perception fill:#ffe6e6,stroke:#333,stroke-width:2px
+  style ObjectPerception fill:#fff2cc,stroke:#333,stroke-width:2px
+  style RobotLocalization fill:#fff2cc,stroke:#333,stroke-width:2px
+  style Planning fill:#e6e6ff,stroke:#333,stroke-width:2px
+  style Actuation fill:#d9f2d9,stroke:#333,stroke-width:2px
+
 ```
 
 **Short explanation placeholder:** Summarize the major data pathways and identify the most important interfaces in the system.
