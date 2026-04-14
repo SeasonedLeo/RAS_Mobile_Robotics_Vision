@@ -177,6 +177,11 @@ This subsection must explain every node shown in the computational map.
 | Navigation | Nav2 stack | Planned consumer of selected next-best-view goal pose | Goal frame, planner/controller settings | External ROS 2 package | Pending integration |
 | Actuation | TurtleBot motion stack | Planned execution of velocity commands generated downstream of Nav2 | Controller/costmap settings | External ROS 2 package | Pending integration |
 
+
+
+
+
+
 ### 2.2.2 Custom Node Logic Flow
 
 ### 1- cylinder_finder
@@ -334,8 +339,9 @@ This section documents feedback integration and individual contributions.
 
 | Milestone 1 Feedback / Question | Action Taken | Technical Change Implemented | Current Status |
 | :--- | :--- | :--- | :--- |
-| `[feedback item]` | `[TODO: describe response]` | `[TODO: describe technical change]` | `[open / in progress / resolved]` |
-| `[feedback item]` | `[TODO: describe response]` | `[TODO: describe technical change]` | `[open / in progress / resolved]` |
+| `Change "Just the Docs Template" Webpage Title.` | `updated the _config.yaml file` | `None` | ` resolved]` |
+| `The system will be considered successful if the following conditions are met:" should not have a bullet point` | `bullet point removed` | `None` | `resolved` |
+| `Khaled's name `| `Removed Place holders` | `None` | `in progress` |
 
 ### 4.2 Individual Contribution
 
@@ -343,7 +349,7 @@ This section documents feedback integration and individual contributions.
 
 | Team Member | Primary Technical Role | Key Git Commits / PRs | Specific File(s) Authorship | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `[Name]` | `[TODO: role]` | `[commit/PR link]` | `[file paths]` | `[TODO: notes]` |
+| `Mohammad Nasr` | `Perception Module` | `[commit/PR link]` | `cylinder finder, box_finder, pose_estimator,orchestrator,nbv_planner,confidence_evaluator` | `all nodes need to be tested on real data/robot` |
 | `[Name]` | `[TODO: role]` | `[commit/PR link]` | `[file paths]` | `[TODO: notes]` |
 
 ---
