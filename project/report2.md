@@ -339,9 +339,9 @@ This section documents feedback integration and individual contributions.
 
 | Milestone 1 Feedback / Question | Action Taken | Technical Change Implemented | Current Status |
 | :--- | :--- | :--- | :--- |
-| `Change "Just the Docs Template" Webpage Title.` | `Updated the _config.yaml file` | `None` | ` resolved` |
-| `The system will be considered successful if the following conditions are met:" should not have a bullet point` | `bullet point removed` | `None` | `resolved` |
-| `Khaled's name `| `Removed Place holders` | `None` | `in progress` |
+| Change "Just the Docs Template" Webpage Title. | Updated the `_config.yaml` file | None | resolved |
+| The sentence "The system will be considered successful if the following conditions are met:" should not have a bullet point. | Removed the bullet point | None | resolved |
+| Khaled's name | Removed placeholders | None | in progress |
 
 ### 4.2 Individual Contribution
 
