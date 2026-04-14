@@ -41,7 +41,7 @@ Using an active perception loop, the system will determine the next-best viewpoi
 
 ### 1.3 Success State (Measurable)
 
-- The system will be considered successful if the following conditions are met:
+The system will be considered successful if the following conditions are met:
 
 - The robot can estimate the ground-plane pose of a target object using RGB-D data.
 
@@ -280,5 +280,6 @@ All safety triggers (deadman timeout, obstacle stop, sensor timeout, localizatio
 ### 6.1 Repository
 
 - **GitHub Page:** https://seasonedleo.github.io/RAS_Mobile_Robotics_Vision/
-- **GitHub Repository :** https://github.com/mohammadnsr1/MobileRobots_Active_Perception
----
+- **GitHub Repository :** https://github.com/mohammadnsr1/MobileRobots_Active_Perception/
+
+

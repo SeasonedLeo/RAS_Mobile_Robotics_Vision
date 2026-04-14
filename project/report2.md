@@ -339,7 +339,7 @@ This section documents feedback integration and individual contributions.
 
 | Milestone 1 Feedback / Question | Action Taken | Technical Change Implemented | Current Status |
 | :--- | :--- | :--- | :--- |
-| `Change "Just the Docs Template" Webpage Title.` | `updated the _config.yaml file` | `None` | ` resolved]` |
+| `Change "Just the Docs Template" Webpage Title.` | `Updated the _config.yaml file` | `None` | ` resolved` |
 | `The system will be considered successful if the following conditions are met:" should not have a bullet point` | `bullet point removed` | `None` | `resolved` |
 | `Khaled's name `| `Removed Place holders` | `None` | `in progress` |
 
@@ -349,7 +349,7 @@ This section documents feedback integration and individual contributions.
 
 | Team Member | Primary Technical Role | Key Git Commits / PRs | Specific File(s) Authorship | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `Mohammad Nasr` | `Perception Module` | `[commit/PR link]` | `cylinder finder, box_finder, pose_estimator,orchestrator,nbv_planner,confidence_evaluator` | `all nodes need to be tested on real data/robot` |
+| `Mohammad Nasr` | `Perception_Module` | `[commit/PR link]` | `cylinder finder, box_finder, pose_estimator,orchestrator,nbv_planner,confidence_evaluator` | `all nodes need to be tested on real data/robot` |
 | `[Name]` | `[TODO: role]` | `[commit/PR link]` | `[file paths]` | `[TODO: notes]` |
 
 ---
