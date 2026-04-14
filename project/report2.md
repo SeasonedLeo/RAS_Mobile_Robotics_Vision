@@ -161,21 +161,22 @@ Custom message and service interfaces are used to facilitate structured data exc
 
 ### 2.2 Module Descriptions
 
-This subsection must explain every node shown in the computational map.
+This section provides a detailed explanation on Modules and their logic.
 
 ### 2.2.1 Module Declaration Table
 
 
 | Module Type | Nodes | Inputs and Outputs | Key Parameters | Source | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| Perception | `cylinder_finder`, `box_finder` | **Input:** `/robot_10/oakd/points [sensor_msgs/msg/PointCloud2]`  **Output:** `/active_perception/target_cloud [sensor_msgs/msg/PointCloud2]`, `viz/detections [visualization_msgs/msg/MarkerArray]` | Segmentation thresholds, cluster size bounds, geometry-specific fitting tolerances | [`cylinder_finder.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/cylinder_finder.py), [`box_finder.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/box_finder.py) | Implemented |
-| Estimation and localization | `pose_estimator` | **Input:** `/active_perception/target_cloud [sensor_msgs/msg/PointCloud2]`, TF  **Output:** `/active_perception/target_pose [geometry_msgs/msg/PoseStamped]`, `/active_perception/pose_estimate_sample [active_perception_interfaces/msg/PoseEstimateSample]`, centroid/axes markers | `anisotropy_threshold`, `min_points`, `base_frame`, `broadcast_tf` | [`pose_estimator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/pose_estimator.py) | Implemented |
-| Planning | `confidence_evaluator` | **Input:** `/active_perception/evaluate_pose_confidence [active_perception_interfaces/srv/EvaluatePoseConfidence]`  **Output:** confidence score, stop flag, NBV flag, diagnostic metrics | `position_variance_norm`, `yaw_variance_norm`, `point_count_norm`, weighting coefficients, threshold | [`confidence_evaluator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/confidence_evaluator.py) | Implemented |
-| Planning | `nbv_planner` | **Input:** `/active_perception/plan_nbv [active_perception_interfaces/srv/PlanNBV]`, TF  **Output:** next viewpoint goal in `odom`, `/active_perception/nbv_markers [visualization_msgs/msg/MarkerArray]` | `planning_frame`, `default_num_candidates`, `default_radius`, utility weights | [`nbv_planner.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/nbv_planner.py) | Implemented |
-| Planning / coordination | `orchestrator` | **Input:** `/active_perception/target_pose [geometry_msgs/msg/PoseStamped]`, `/active_perception/pose_estimate_sample [active_perception_interfaces/msg/PoseEstimateSample]`, `/odom [nav_msgs/msg/Odometry]`  **Output:** service calls to confidence evaluation and NBV planning; planned Nav2 goal handoff | `history_size`, `desired_confidence_threshold`, `min_history_length`, `nbv_radius`, `nbv_num_candidates` | [`orchestrator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/orchestrator.py) | Implemented, Nav2 integration pending |
-| Interfaces | `PoseEstimateSample.msg`, `EvaluatePoseConfidence.srv`, `PlanNBV.srv` | Defines the message and service contracts used between estimation, confidence evaluation, and viewpoint planning | Interface schema fields | [`msg/` and `srv/`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/active_perception_interfaces) | Implemented |
-| Navigation | Nav2 stack | Planned consumer of selected next-best-view goal pose | Goal frame, planner/controller settings | External ROS 2 package | Pending integration |
-| Actuation | TurtleBot motion stack | Planned execution of velocity commands generated downstream of Nav2 | Controller/costmap settings | External ROS 2 package | Pending integration |
+| Perception | `cylinder_finder`, `box_finder`, `pose_estimator` | **Input:** `/oakd/points [sensor_msgs/msg/PointCloud2]`, `/active_perception/target_cloud [sensor_msgs/msg/PointCloud2]`, `/tf`, `/tf_static`  **Output:** `/active_perception/target_cloud [sensor_msgs/msg/PointCloud2]`, `/active_perception/target_pose [geometry_msgs/msg/PoseStamped]`, `/active_perception/pose_estimate_sample [active_perception_interfaces/msg/PoseEstimateSample]`, `viz/detections [visualization_msgs/msg/MarkerArray]`, target markers | Segmentation thresholds, clustering limits, fitting tolerances, `target_frame`, PCA anisotropy threshold, minimum point count | [`cylinder_finder.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/cylinder_finder.py), [`box_finder.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/box_finder.py), [`pose_estimator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/pose_estimator.py) | Implemented |
+| Estimation and localization | `Visual Odometry`, `EKF` | **Input:** [TBD]  **Output:** `/odom [nav_msgs/msg/Odometry]` | [TBD] | [TBD] | In progress |
+| Planning | `confidence_evaluator` | **Input:** `/active_perception/evaluate_pose_confidence [active_perception_interfaces/srv/EvaluatePoseConfidence]`  **Output:** confidence score, stop flag, NBV flag, diagnostic metrics | Stability weights, variance normalization terms, confidence threshold, recency weighting | [`confidence_evaluator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/confidence_evaluator.py) | Implemented |
+| Planning | `nbv_planner` | **Input:** `/active_perception/plan_nbv [active_perception_interfaces/srv/PlanNBV]`, `/tf`  **Output:** next best view in `odom`, `/active_perception/nbv_markers [visualization_msgs/msg/MarkerArray]` | `planning_frame`, candidate count, radius bounds, utility weights | [`nbv_planner.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/nbv_planner.py) | Implemented |
+| Planning / coordination | `orchestrator` | **Input:** `/active_perception/target_pose [geometry_msgs/msg/PoseStamped]`, `/active_perception/pose_estimate_sample [active_perception_interfaces/msg/PoseEstimateSample]`, `/odom [nav_msgs/msg/Odometry]`  **Output:** service calls to confidence evaluation and NBV planning, planned Nav2 goal handoff | `history_size`, desired confidence threshold, minimum history length, NBV radius and candidate settings | [`orchestrator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/orchestrator.py) | Implemented, Nav2 integration pending |
+| Custom interfaces | `PoseEstimateSample.msg`, `EvaluatePoseConfidence.srv`, `PlanNBV.srv` | Defines the message and service contracts between perception, orchestration, confidence evaluation, and NBV planning | Interface field definitions | [`active_perception_interfaces`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/active_perception_interfaces) | Implemented |
+| Navigation | `Nav2 stack` | **Input:** planned next-best-view goal in `odom`  **Output:** planned robot motion / action execution | Goal frame, planner settings, controller settings | External ROS 2 package | Pending integration |
+
+
 
 
 
@@ -184,89 +185,51 @@ This subsection must explain every node shown in the computational map.
 
 ### 2.2.2 Custom Node Logic Flow
 
-### 1- cylinder_finder
+The active perception system is organized as a staged ROS 2 pipeline in which perception nodes stream observations continuously, while confidence evaluation and next-best-view selection are triggered on demand by the orchestrator. This separation keeps high-rate sensing and lower-rate decision making decoupled, which simplifies both debugging and future integration with navigation.
 
-**Purpose:** Detect cylindrical objects from RGB-D data and publish a segmented point cloud corresponding to the target object.  
+### cylinder_finder
 
-**Inputs:** RGB-D point cloud `/robot_10/oakd/points`  
+The `cylinder_finder` node performs geometry-specific perception for cylindrical targets. Starting from the incoming RGB-D point cloud, the node applies workspace filtering, downsampling, floor removal, local clustering, and cylinder fitting. Candidate clusters are evaluated using geometric consistency and inlier support, after which the strongest detection is selected and published as `/active_perception/target_cloud`.
 
-**Outputs:** Segmented object point cloud, detection flag  
+Within the complete system, this node acts as a front-end detector for one object class. Its purpose is not to estimate the final object pose directly, but rather to isolate a reliable target point cloud that can be passed to the pose estimation stage. This design allows the finder to remain object-specific while the downstream pose estimator remains reusable across multiple target types.
 
-**Internal logic flow:** Subscribe to point cloud → filter noise → segment cylindrical geometry → extract object cloud → publish segmentation and detection status  
+### box_finder
 
-**Key parameters:** `depth_range`, `segmentation_threshold`, `min_cluster_size`, `target_radius_tolerance`  
+The `box_finder` node plays the same architectural role as the cylinder finder, but for box-shaped objects. It applies filtering, floor segmentation, Euclidean clustering, and PCA-based oriented box fitting to evaluate candidate clusters. The selected target is then published to the same shared topic, `/active_perception/target_cloud`.
 
-**Source file link:** [TODO: Add source file path](../path/to/cylinder_finder)  
+This shared-output design allows the remainder of the system to stay agnostic to which detector produced the object cloud. In practice, only the detector relevant to the current experiment needs to be active, while the rest of the active perception stack can remain unchanged.
 
-**Status:** Implemented  
+### pose_estimator
 
+The `pose_estimator` node receives the segmented target cloud and converts it into a compact pose representation suitable for planning. The incoming point cloud is first transformed from the camera optical frame into the planning frame, `odom`, using TF. Pose estimation is then performed in that common frame by computing the object centroid and using PCA to infer a stable planar orientation.
 
-### 2- pose_estimator
+The node publishes both `/active_perception/target_pose` and `/active_perception/pose_estimate_sample`. The first provides a direct pose output for downstream consumers, while the second packages additional metadata such as point count, anisotropy ratio, and yaw source. These extra fields are important because the downstream confidence evaluator reasons not only over pose values, but also over the quality and consistency of each estimate.
 
-**Purpose:** Compute object pose from segmented point cloud and transform it from the camera optical frame to the `odom` frame.  
+### confidence_evaluator
 
-**Inputs:** Segmented object point cloud, TF `camera_optical_frame → base_link → odom`  
+The `confidence_evaluator` node is implemented as a service rather than a streaming subscriber. This is a deliberate design choice: confidence should be evaluated only after the orchestrator has accumulated a short history of recent pose estimates. When called, the service receives a batch of `PoseEstimateSample` messages and computes a confidence score based on positional stability, yaw stability, point support, anisotropy, and whether the yaw estimate was derived from PCA.
 
-**Outputs:** Object pose in camera frame, object pose in `odom` frame  
+Its role in the full system is to convert raw pose history into a decision signal. Instead of simply asking whether a pose exists, the system asks whether the pose estimate is reliable enough to terminate the active perception loop. The service returns both a confidence score and a decision about whether another viewpoint should be planned.
 
-**Internal logic flow:** Receive cloud → compute centroid → apply PCA → estimate yaw → construct pose in camera frame → transform to `odom` → publish pose  
+### nbv_planner
 
-**Key parameters:** `pca_eigenvalue_threshold`, `minimum_point_count`, `pose_smoothing_window_size`  
+The `nbv_planner` node is also implemented as a service. Given the current target pose and robot pose, it transforms both into the planning frame if needed, samples candidate viewpoints around the object, scores them using a utility-based cost function, and returns the best candidate as a new pose in `odom`. The planner also publishes visualization markers for candidate viewpoints, which makes the selected next-best-view strategy easier to inspect in RViz.
 
-**Source file link:** [../src/pose_estimator.py](../src/pose_estimator.py)  
+In the overall system, this node bridges perception and navigation. It converts uncertainty in the current estimate into a concrete spatial action: where the robot should move next to improve object observability.
 
-**Status:** Implemented  
+### orchestrator
 
+The `orchestrator` is the coordination layer for the active perception loop. It subscribes to the streaming pose outputs from the pose estimator and stores a bounded history of recent pose samples. Once enough samples have been collected, it calls the `confidence_evaluator` service. If confidence is sufficiently high, the loop terminates. Otherwise, it calls the `nbv_planner` service to request a new goal in `odom`.
 
-### 3- confidence_evaluator
+This node is responsible for turning a collection of independent modules into a closed-loop behavior. Rather than embedding all processing in a single monolithic node, the orchestrator keeps module boundaries explicit and manages when each service should be invoked. This makes the system easier to test incrementally and leaves a clean insertion point for the final Nav2 action handoff.
 
-**Purpose:** Evaluate the consistency of repeated pose estimates and compute a confidence score used to determine whether another viewpoint is required.  
+### custom interfaces
 
-**Inputs:** Service request containing a batch or window of object poses in `odom` frame  
+The custom interfaces are used to keep data exchange structured and explicit. `PoseEstimateSample.msg` carries pose information together with quality-related metadata that would be awkward to infer downstream from a bare pose topic. `EvaluatePoseConfidence.srv` defines the contract between the orchestrator and the confidence evaluator, while `PlanNBV.srv` defines the contract for viewpoint generation.
 
-**Outputs:** Service response containing confidence score and NBV-required flag  
-
-**Internal logic flow:** Receive a set of recent pose estimates → compute consistency metrics over position and orientation → evaluate convergence against thresholds → compute confidence score → return confidence score and NBV decision  
-
-**Key parameters:** `window_size`, `confidence_threshold`, `position_variance_threshold`, `orientation_variance_threshold`  
-
-**Source file link:** [../src/confidence_evaluator.py](../src/confidence_evaluator.py)  
-
-**Status:** Planned  
+These interfaces are an important part of the system design because they formalize what information is exchanged between estimation, decision making, and planning. In addition to improving modularity, they make the ROS 2 graph easier to interpret and reduce ambiguity in how intermediate data products are represented.
 
 
-### 4- nbv_planner
-
-**Purpose:** Generate the next best viewpoint using utility-based sampling around the estimated object pose.  
-
-**Inputs:** Service request containing object pose in `odom`, confidence score, and robot pose in `odom`  
-
-**Outputs:** Service response containing next goal pose in `odom`  
-
-**Internal logic flow:** Sample candidate viewpoints around object → evaluate each candidate using utility function → select highest-utility viewpoint → convert selected candidate to goal pose in `odom` → return goal pose  
-
-**Key parameters:** `sampling_radius`, `num_candidates`, `utility_weights`  
-
-**Source file link:** [../src/nbv_planner.py](../src/nbv_planner.py)  
-
-**Status:** Planned  
-
-
-### 5- orchestrator
-
-**Purpose:** Coordinate the active perception loop by collecting pose estimates, calling confidence evaluation, requesting a new viewpoint when needed, and sending navigation goals to Nav2.  
-
-**Inputs:** Object poses from `pose_estimator`, navigation status from Nav2  
-
-**Outputs:** Service request to `confidence_evaluator`, service request to `nbv_planner`, navigation goal to Nav2  
-
-**Internal logic flow:** Subscribe to pose estimates from `pose_estimator` → store a fixed window of recent poses → call `confidence_evaluator` service to assess consistency and compute confidence → if confidence is above threshold and NBV flag is false, terminate loop → otherwise call `nbv_planner` service to request a new goal in `odom` → send goal to Nav2 → wait for navigation result → repeat observation and evaluation loop until convergence  
-
-**Key parameters:** `pose_window_size`, `confidence_threshold`, `max_iterations`, `reobserve_delay`  
-
-**Source file link:** [../src/orchestrator.py](../src/orchestrator.py)  
-
-**Status:** Planned   
 
 #### 2.2.3 Library Node Configuration
 
