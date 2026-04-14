@@ -72,7 +72,7 @@ This section describes the functional modules that compose the active perception
 
 
 
-### 2.1.1 Mermaid Diagram
+### 2.1 Mermaid Diagram
 
 ### 2.1.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
 
@@ -136,27 +136,28 @@ flowchart LR
   style Actuation fill:#d9f2d9,stroke:#333,stroke-width:2px
 
 ```
-**Short explanation placeholder:** Summarize the major data pathways and identify the most important interfaces in the system.
 
-#### 2.1.2 rqt_graph Export
+### 2.1.2 rqt_graph Export
 
-<!-- TODO: Insert the exported rqt_graph image or screenshot here. -->
-<!-- TODO: Ensure topic and node labels are readable in the final submission. -->
+<div align="center">
+  <img src="{{ '/assets/images/Fig1.png' | relative_url }}" 
+       alt="Annotated ROS2 Computational Graph" 
+       width="90%">
+</div>
 
-**Placeholder guidance:** Add the current `rqt_graph` export that reflects the implemented nodes and communication graph.
+**Figure 2.1.** Annotated ROS 2 computational graph for the active perception pipeline. Solid black arrows denote implemented topic connections labeled as `/topic_name [msg_type]`. Dashed red arrows denote implemented service calls labeled as `/name [srv_type]`, while dashed blue arrows denote planned Nav2 action integration labeled as `/name [action_type]`. The graph illustrates the flow from perception through pose estimation and orchestration to next-best-view planning and navigation.
 
-`[TODO: Insert rqt_graph image or screenshot here]`
 
-**Short explanation placeholder:** Briefly describe what the exported graph confirms about the live ROS 2 computation graph.
+**Explanation:** Figure 2.1 provides a runtime view of the ROS 2 system, complementing the conceptual architecture shown in the Mermaid diagram. The figure highlights the distinction between streaming perception topics and service-based decision modules.
 
-#### 2.1.3 Annotated Communication Notes
+The perception nodes detect the target object (box or cylinder) using point cloud processing techniques introduced in class. The object pose \((x, y, \text{yaw})\) is estimated using PCA and then transformed into the `odom` frame by the pose estimator node. These pose estimates are continuously streamed and consumed by the orchestrator node.
 
-<!-- TODO: Add annotated notes if the raw rqt_graph requires clarification. -->
-<!-- TODO: Highlight any remappings, multiplexed topics, or hidden infrastructure nodes. -->
+The orchestrator aggregates a short history of pose estimates and calls the `confidence_evaluator` service to compute a confidence score and determine whether an additional viewpoint is required. If the confidence exceeds the desired threshold, the process terminates. Otherwise, the orchestrator calls the `nbv_planner` service, which computes the next best view in the `odom` frame.
 
-**Placeholder guidance:** Use this subsection if the raw computational graph needs clarification for reviewers.
+The resulting goal is passed to the Nav2 stack, which plans and executes a collision-free trajectory using state feedback from visual odometry fused with an EKF. This active perception loop continues until the confidence level exceeds the predefined threshold.
 
-**Short explanation placeholder:** Explain any non-obvious communication paths, launch-time remappings, or auxiliary library nodes.
+Custom message and service interfaces are used to facilitate structured data exchange between modules and will be described in the following section.
+
 
 ### 2.2 Module Descriptions
 
