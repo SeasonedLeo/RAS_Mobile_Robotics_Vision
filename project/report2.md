@@ -133,10 +133,9 @@ flowchart LR
   style ObjectPerception fill:#fff2cc,stroke:#333,stroke-width:2px
   style RobotLocalization fill:#fff2cc,stroke:#333,stroke-width:2px
   style Planning fill:#e6e6ff,stroke:#333,stroke-width:2px
-  style Actuation fill:#d9f2d9,stroke:#333,stroke-width:2px -->
+  style Actuation fill:#d9f2d9,stroke:#333,stroke-width:2px
 
 ```
-
 **Short explanation placeholder:** Summarize the major data pathways and identify the most important interfaces in the system.
 
 #### 2.1.2 rqt_graph Export
