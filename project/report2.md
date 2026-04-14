@@ -212,12 +212,11 @@ The `confidence_evaluator` node is implemented as a service rather than a stream
 The `nbv_planner` selects the next-best-view using a **discrete candidate evaluation strategy**. Given the current target pose and robot pose in the planning frame, it samples \(N\) candidate viewpoints uniformly on a circle around the object:
 
 $$
-\phi_i = \phi_0 + \frac{2\pi i}{N},
-$$
-
-$$
-x_i = x_t + r\cos(\phi_i), \qquad
-y_i = y_t + r\sin(\phi_i),
+\begin{aligned}
+\phi_i &= \phi_0 + \frac{2\pi i}{N}, \\
+x_i &= x_t + r \cos(\phi_i), \\
+y_i &= y_t + r \sin(\phi_i),
+\end{aligned}
 $$
 
 with each candidate yaw chosen to face the target:
@@ -235,11 +234,11 @@ $$
 where
 
 $$
-C_r^{(i)} = \frac{|r-r_d|}{\max(r_d,\varepsilon)},
-\qquad
-C_d^{(i)} = \frac{\|\mathbf{p}_i-\mathbf{p}_r\|}{\max(r_{\max},\varepsilon)},
-\qquad
-C_h^{(i)} = \frac{|\operatorname{wrap}(\theta_i-\theta_r)|}{\pi}.
+\begin{aligned}
+C_r^{(i)} &= \frac{|r - r_d|}{\max(r_d,\varepsilon)}, \\
+C_d^{(i)} &= \frac{\|\mathbf{p}_i - \mathbf{p}_r\|}{\max(r_{\max},\varepsilon)}, \\
+C_h^{(i)} &= \frac{|\operatorname{wrap}(\theta_i - \theta_r)|}{\pi}.
+\end{aligned}
 $$
 
 The selected next-best-view is the sampled candidate with minimum cost:
