@@ -209,70 +209,48 @@ The `confidence_evaluator` node is implemented as a service rather than a stream
 
 ### nbv_planner
 
-The `nbv_planner` node is implemented as a service that selects the next viewpoint by minimizing a weighted cost over a discrete set of sampled candidate poses around the current target estimate. After transforming the current target pose and robot pose into the common planning frame, the planner samples \(N\) candidate viewpoints uniformly on a circle of radius \(r\) around the target. The sampling angle for candidate \(i\) is defined as
+The `nbv_planner` selects the next-best-view using a **discrete candidate evaluation strategy**. Given the current target pose and robot pose in the planning frame, it samples \(N\) candidate viewpoints uniformly on a circle around the object:
 
-\[
-\phi_i = \phi_0 + \frac{2\pi i}{N}, \qquad i = 0,1,\dots,N-1
-\]
+$$
+\phi_i = \phi_0 + \frac{2\pi i}{N},
+$$
 
-where \(\phi_0\) is initialized from the current robot-to-target bearing. Each candidate position is then generated as
+$$
+x_i = x_t + r\cos(\phi_i), \qquad
+y_i = y_t + r\sin(\phi_i),
+$$
 
-\[
-x_i = x_t + r\cos(\phi_i), \qquad y_i = y_t + r\sin(\phi_i)
-\]
+with each candidate yaw chosen to face the target:
 
-with the candidate yaw chosen so that the robot faces the object:
+$$
+\theta_i = \operatorname{atan2}(y_t - y_i,\; x_t - x_i).
+$$
 
-\[
-\theta_i = \operatorname{atan2}(y_t - y_i,\; x_t - x_i)
-\]
+Each candidate is scored using the weighted cost
 
-Thus, each candidate viewpoint is explicitly constructed to lie on the sampling circle while orienting the robot toward the target. 
+$$
+J^{(i)} = w_r C_r^{(i)} + w_d C_d^{(i)} + w_h C_h^{(i)},
+$$
 
-For each candidate viewpoint, the planner computes three normalized cost terms. First, the radius error term penalizes deviation between the actual sampled radius \(r\) and the desired observation radius \(r_d\):
+where
 
-\[
-C_r^{(i)} = \frac{|r - r_d|}{\max(r_d,\varepsilon)}
-\]
+$$
+C_r^{(i)} = \frac{|r-r_d|}{\max(r_d,\varepsilon)},
+\qquad
+C_d^{(i)} = \frac{\|\mathbf{p}_i-\mathbf{p}_r\|}{\max(r_{\max},\varepsilon)},
+\qquad
+C_h^{(i)} = \frac{|\operatorname{wrap}(\theta_i-\theta_r)|}{\pi}.
+$$
 
-Second, the travel distance term penalizes the distance from the current robot position \((x_r,y_r)\) to the candidate viewpoint \((x_i,y_i)\), normalized by the maximum allowed radius \(r_{\max}\):
+The selected next-best-view is the sampled candidate with minimum cost:
 
-\[
-C_d^{(i)} = \frac{\sqrt{(x_i-x_r)^2 + (y_i-y_r)^2}}{\max(r_{\max},\varepsilon)}
-\]
+$$
+i^* = \arg\min_i J^{(i)}.
+$$
 
-Third, the heading change term penalizes how much the robot would need to rotate from its current yaw \(\theta_r\) to the candidate yaw \(\theta_i\), using wrapped angular difference and normalization by \(\pi\):
+Therefore, the planner does not solve a continuous optimization problem; it samples a finite set of candidate viewpoints, scores them, and returns the lowest-cost one.
 
-\[
-C_h^{(i)} = \frac{\left|\operatorname{wrap}(\theta_i-\theta_r)\right|}{\pi}
-\]
 
-where \(\operatorname{wrap}(\cdot)\) maps the angle difference to the interval \([-\pi,\pi]\). 
-
-The total candidate cost is then computed exactly as a weighted sum of these three terms:
-
-\[
-J^{(i)} =
-w_r\, C_r^{(i)}
-+
-w_d\, C_d^{(i)}
-+
-w_h\, C_h^{(i)}
-\]
-
-where \(w_r\), \(w_d\), and \(w_h\) correspond respectively to `weight_radius_error`, `weight_travel_distance`, and `weight_heading_change`. In the current implementation, the next-best-view is selected by choosing the candidate with minimum total cost:
-
-\[
-i^* = \arg\min_{i \in \{0,\dots,N-1\}} J^{(i)}
-\]
-
-and the resulting best viewpoint is returned as
-
-\[
-\mathbf{v}^* = \mathbf{v}_{i^*}
-\]
-
-Therefore, the planner favors viewpoints that remain close to the desired observation radius, require less translational motion from the robot’s current position, and require smaller heading changes. In its present form, the utility function does not explicitly model occlusion or visibility; instead, it selects among geometrically convenient candidate views using these motion- and radius-based heuristics. 
 
 ### orchestrator
 
