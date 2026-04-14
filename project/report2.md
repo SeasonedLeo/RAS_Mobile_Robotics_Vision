@@ -71,15 +71,81 @@ $$
 This section describes the functional modules that compose the active perception pipeline. Each module is responsible for a specific stage of object detection, pose estimation, viewpoint planning, and navigation. The system is organized as a ROS 2 network where perception nodes stream observations, decision modules operate on demand, and an orchestrator manages the active perception loop.
 
 
+
+
+
 ### 2.1 Detailed Computational Map
 
-**Placeholder guidance:** Provide the updated end-to-end communication structure for the implemented ROS 2 system, including nodes, topics, services, and actions.
+This subsection documents the implemented ROS 2 communication structure for the active perception pipeline. Unlike the conceptual architecture shown in Report 1, the following map focuses on the actual runtime plumbing between custom nodes, custom interfaces, and the localization stream used to support iterative viewpoint selection.
 
-#### 2.1.1 Mermaid Diagram
+### 2.1.1 Mermaid Diagram
 
-<!-- TODO: Replace this placeholder diagram with the updated system Mermaid diagram. -->
-<!-- TODO: Label topics as /topic_name [msg_type]. -->
-<!-- TODO: Label services/actions as /name [srv_type] or /name [action_type]. -->
+```mermaid
+flowchart LR
+
+  PC["/robot_10/oakd/points [sensor_msgs/msg/PointCloud2]"]
+
+  subgraph Perception
+    CF["cylinder_finder"]
+    BF["box_finder"]
+  end
+
+  subgraph Estimation
+    PE["pose_estimator"]
+  end
+
+  subgraph Planning
+    ORCH["orchestrator"]
+    CE["confidence_evaluator"]
+    NBV["nbv_planner"]
+  end
+
+  subgraph Localization
+    ODOM["/odom [nav_msgs/msg/Odometry]"]
+    TF["TF tree"]
+  end
+
+  subgraph Outputs
+    TC["/active_perception/target_cloud [sensor_msgs/msg/PointCloud2]"]
+    TP["/active_perception/target_pose [geometry_msgs/msg/PoseStamped]"]
+    PS["/active_perception/pose_estimate_sample [active_perception_interfaces/msg/PoseEstimateSample]"]
+    NM["/active_perception/nbv_markers [visualization_msgs/msg/MarkerArray]"]
+  end
+
+  PC --> CF
+  PC --> BF
+
+  CF --> TC
+  BF --> TC
+
+  TC --> PE
+  TF --> PE
+
+  PE --> TP
+  PE --> PS
+
+  TP --> ORCH
+  PS --> ORCH
+  ODOM --> ORCH
+
+  ORCH -->|/active_perception/evaluate_pose_confidence [active_perception_interfaces/srv/EvaluatePoseConfidence]| CE
+  CE -->|confidence score, stop flag, NBV flag| ORCH
+
+  ORCH -->|/active_perception/plan_nbv [active_perception_interfaces/srv/PlanNBV]| NBV
+  NBV -->|goal pose in odom frame| ORCH
+  TF --> NBV
+  NBV --> NM
+
+  ORCH -. planned Nav2 goal/action .-> NAV2["Nav2 action server"]
+
+
+<!-- ### 2.1 Detailed Computational Map -->
+
+<!-- **Placeholder guidance:** Provide the updated end-to-end communication structure for the implemented ROS 2 system, including nodes, topics, services, and actions. -->
+
+<!-- ### 2.1.1 Mermaid Diagram -->
+<!-- 
+### 2.1.1 Data Flow Diagram (Perception → Estimation → Planning → Actuation)
 
 ```mermaid
 flowchart LR
