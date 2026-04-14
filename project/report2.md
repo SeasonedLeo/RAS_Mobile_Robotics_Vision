@@ -1,5 +1,6 @@
 ---
 layout: default
+math: mathjax
 title: "Report 2"
 parent: Project
 nav_order: 2
