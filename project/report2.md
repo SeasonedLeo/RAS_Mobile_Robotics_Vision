@@ -195,9 +195,7 @@ Within the complete system, this node acts as a front-end detector for one objec
 
 ### box_finder
 
-The `box_finder` node plays the same architectural role as the cylinder finder, but for box-shaped objects. It applies filtering, floor segmentation, Euclidean clustering, and PCA-based oriented box fitting to evaluate candidate clusters. The selected target is then published to the same shared topic, `/active_perception/target_cloud`.
-
-This shared-output design allows the remainder of the system to stay agnostic to which detector produced the object cloud. In practice, only the detector relevant to the current experiment needs to be active, while the rest of the active perception stack can remain unchanged.
+The `box_finder` node plays the same architectural role as the cylinder_finder, but is specialized for box-shaped objects. It processes the incoming point cloud through spatial filtering, floor segmentation, and Euclidean clustering to isolate candidate object clusters. For each cluster, it then applies a PCA-based oriented bounding box fitting method: the cluster covariance is analyzed to extract principal axes, one axis is constrained to align with the expected vertical direction, and the cluster is projected into this local frame to estimate box center, orientation, and dimensions. Simple geometric checks on size and aspect ratios are then used to reject implausible candidates. The selected target cluster is published to the shared topic /`active_perception/target_cloud`.
 
 ### pose_estimator
 
@@ -207,15 +205,74 @@ The node publishes both `/active_perception/target_pose` and `/active_perception
 
 ### confidence_evaluator
 
-The `confidence_evaluator` node is implemented as a service rather than a streaming subscriber. This is a deliberate design choice: confidence should be evaluated only after the orchestrator has accumulated a short history of recent pose estimates. When called, the service receives a batch of `PoseEstimateSample` messages and computes a confidence score based on positional stability, yaw stability, point support, anisotropy, and whether the yaw estimate was derived from PCA.
-
-Its role in the full system is to convert raw pose history into a decision signal. Instead of simply asking whether a pose exists, the system asks whether the pose estimate is reliable enough to terminate the active perception loop. The service returns both a confidence score and a decision about whether another viewpoint should be planned.
+The `confidence_evaluator` node is implemented as a service rather than a streaming subscriber. This is a deliberate design choice: confidence should be evaluated only after the orchestrator has accumulated a short history of recent pose estimates.The `confidence_evaluator` node assesses whether the current object pose estimate is reliable enough to terminate the active perception loop. Rather than evaluating a single estimate, it scores a recent history of PoseEstimateSample observations using weighted measures of positional stability, yaw stability, average point count, anisotropy of the observed cloud, and the fraction of estimates whose yaw was derived from PCA rather than fallback centroid bearing. The resulting confidence score is compared against a user-defined threshold and minimum history length to determine whether the system should stop or continue planning a next-best view.
 
 ### nbv_planner
 
-The `nbv_planner` node is also implemented as a service. Given the current target pose and robot pose, it transforms both into the planning frame if needed, samples candidate viewpoints around the object, scores them using a utility-based cost function, and returns the best candidate as a new pose in `odom`. The planner also publishes visualization markers for candidate viewpoints, which makes the selected next-best-view strategy easier to inspect in RViz.
+The `nbv_planner` node is implemented as a service that selects the next viewpoint by minimizing a weighted cost over a discrete set of sampled candidate poses around the current target estimate. After transforming the current target pose and robot pose into the common planning frame, the planner samples \(N\) candidate viewpoints uniformly on a circle of radius \(r\) around the target. The sampling angle for candidate \(i\) is defined as
 
-In the overall system, this node bridges perception and navigation. It converts uncertainty in the current estimate into a concrete spatial action: where the robot should move next to improve object observability.
+\[
+\phi_i = \phi_0 + \frac{2\pi i}{N}, \qquad i = 0,1,\dots,N-1
+\]
+
+where \(\phi_0\) is initialized from the current robot-to-target bearing. Each candidate position is then generated as
+
+\[
+x_i = x_t + r\cos(\phi_i), \qquad y_i = y_t + r\sin(\phi_i)
+\]
+
+with the candidate yaw chosen so that the robot faces the object:
+
+\[
+\theta_i = \operatorname{atan2}(y_t - y_i,\; x_t - x_i)
+\]
+
+Thus, each candidate viewpoint is explicitly constructed to lie on the sampling circle while orienting the robot toward the target. 
+
+For each candidate viewpoint, the planner computes three normalized cost terms. First, the radius error term penalizes deviation between the actual sampled radius \(r\) and the desired observation radius \(r_d\):
+
+\[
+C_r^{(i)} = \frac{|r - r_d|}{\max(r_d,\varepsilon)}
+\]
+
+Second, the travel distance term penalizes the distance from the current robot position \((x_r,y_r)\) to the candidate viewpoint \((x_i,y_i)\), normalized by the maximum allowed radius \(r_{\max}\):
+
+\[
+C_d^{(i)} = \frac{\sqrt{(x_i-x_r)^2 + (y_i-y_r)^2}}{\max(r_{\max},\varepsilon)}
+\]
+
+Third, the heading change term penalizes how much the robot would need to rotate from its current yaw \(\theta_r\) to the candidate yaw \(\theta_i\), using wrapped angular difference and normalization by \(\pi\):
+
+\[
+C_h^{(i)} = \frac{\left|\operatorname{wrap}(\theta_i-\theta_r)\right|}{\pi}
+\]
+
+where \(\operatorname{wrap}(\cdot)\) maps the angle difference to the interval \([-\pi,\pi]\). 
+
+The total candidate cost is then computed exactly as a weighted sum of these three terms:
+
+\[
+J^{(i)} =
+w_r\, C_r^{(i)}
++
+w_d\, C_d^{(i)}
++
+w_h\, C_h^{(i)}
+\]
+
+where \(w_r\), \(w_d\), and \(w_h\) correspond respectively to `weight_radius_error`, `weight_travel_distance`, and `weight_heading_change`. In the current implementation, the next-best-view is selected by choosing the candidate with minimum total cost:
+
+\[
+i^* = \arg\min_{i \in \{0,\dots,N-1\}} J^{(i)}
+\]
+
+and the resulting best viewpoint is returned as
+
+\[
+\mathbf{v}^* = \mathbf{v}_{i^*}
+\]
+
+Therefore, the planner favors viewpoints that remain close to the desired observation radius, require less translational motion from the robot’s current position, and require smaller heading changes. In its present form, the utility function does not explicitly model occlusion or visibility; instead, it selects among geometrically convenient candidate views using these motion- and radius-based heuristics. 
 
 ### orchestrator
 
