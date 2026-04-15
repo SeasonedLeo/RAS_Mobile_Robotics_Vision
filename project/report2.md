@@ -453,6 +453,72 @@ This subsection summarizes behaviors observed during integration runs and curren
 - Video 1: VO + EKF localization demo (RViz + topic outputs) [insert link]
 - Video 2: Active perception loop demo (pose estimation + confidence + NBV) [insert link]
 
+# Experimental Analysis & Validation
+
+Focus of this section is left/right camera timing quality and how it affects stereo VO.
+
+## 3.1 Noise & Uncertainty Analysis
+
+### 3.1.1 Hardware Noise / Sensor Calibration
+
+Stereo processing used:
+- `/robot_10/oakd/left/image_raw`
+- `/robot_10/oakd/right/image_raw`
+- `/robot_10/oakd/left/camera_info`
+- `/robot_10/oakd/right/camera_info`
+
+Timing span from notebook:
+- `left span [sec]  : 76.087`
+- `right span [sec] : 74.854`
+- `odom span [sec]  : 79.601`
+
+What this shows:
+- Left and right streams do not run with identical coverage in time.
+- The right stream ends earlier than the left stream by about `1.23 s`.
+- This creates fewer usable stereo pairs in later parts of the run.
+
+Measured frame timing (from notebook matrices):
+- Left frame interval mean: `119.634 ms`
+- Right frame interval mean: `128.837 ms`
+- Odom interval mean: `54.521 ms`
+- Left/right pairing was performed using image `header.stamp` timestamps (with bag timestamp fallback only if header time is missing).
+
+Measured left-right pairing error (with `50 ms` pairing slop):
+- mean: `17.92 ms`
+- median: `33.30 ms`
+- p95: `33.36 ms`
+- max: `33.36 ms`
+
+What these numbers mean:
+- The mean (`17.92 ms`) looks moderate, but the distribution is not centered near zero.
+- Median and p95 are both around `33 ms`, which means many accepted pairs are near that offset, not just rare outliers.
+- With left/right frame intervals around `120–129 ms`, a `~33 ms` offset is about a quarter to a third of one frame period.
+- For stereo depth, that is large enough that moving objects (or robot motion) can shift noticeably between the two images, reducing disparity consistency.
+- This matches the observed behavior: unstable depth support and repeated ORB-SLAM tracking resets.
+
+## 3.2 Run-Time Issues
+
+### 3.2.1 Failure Cases Observed
+
+- Left-right timestamps are frequently offset by `~33 ms`, especially in the upper tail.
+- Because stereo depth depends on matching the same scene instant, this offset creates disparity error when the robot moves.
+- ORB-SLAM then shows repeated `Fail to track local map` behavior and map resets.
+- The resulting trajectory can look compressed near the origin when reset segments are plotted together.
+
+### 3.2.2 Recovery / Mitigation Logic
+
+- Use strict timestamp-based pairing from `header.stamp` for left and right images.
+- Keep reporting mean/median/p95 pairing error in each run (already in notebook).
+- Reduce sync tolerance toward `10–20 ms` and compare resulting pair count vs tracking quality.
+- Keep calibration from camera_info fixed while tuning only timing first (to isolate root cause).
+
+### 3.2.3 Remaining Limitations
+
+- Hardware-level stereo synchronization is still not finalized.
+- Current bag quality is enough for analysis, but not yet clean enough for stable continuous ORB-SLAM tracking.
+- Final benchmark metrics should be generated after improving left-right timing quality first.
+
+
 ---
 
 ## 4. Project Management
