@@ -293,6 +293,44 @@ ORB-SLAM 3 tracks visual features (ORB keypoints) across consecutive stereo fram
 
 **Output format:** The node publishes the current robot pose as a local visual-odometry estimate. The trajectory is relative to the initial startup pose, so accumulated drift and local frame consistency should be expected.
 
+# How ORB-SLAM Was Used and Calibrated (Notebook Summary)
+
+## 1) How ORB-SLAM was used in `orbslam_stereo_calibration_analysis.ipynb`
+
+| Item | What was done in notebook |
+|---|---|
+| Input data | Stereo images from `/robot_10/oakd/left/image_raw` and `/robot_10/oakd/right/image_raw` |
+| Time pairing | Left/right paired by `header.stamp` (bag timestamp only as fallback) |
+| Image preprocessing | Left/right rectified using camera_info-derived rectification maps |
+| ORB-SLAM backend | `orbslam3_backend.StereoSystem(...)` initialized in notebook end cell |
+| Tracking call | `track_stereo(left_rect, right_rect, timestamp_sec)` per paired frame |
+| Pose output used | `T_cw` converted to world pose (`inv(T_cw)`), then XY trajectory plotted |
+| Result shown | ORB path plot, position-vs-time plot, and scaled overlay against odom |
+
+## 2) How calibration/settings were handled
+
+| Parameter group | Source in notebook | Status |
+|---|---|---|
+| Intrinsics (`fx, fy, cx, cy`) | `/robot_10/oakd/left/camera_info` projection/intrinsic data | Calibrated (fixed from camera) |
+| Stereo baseline (`baseline`, `Camera.bf`) | Left/right camera_info projection matrices (`P`) | Calibrated (fixed from camera) |
+| Resolution (`width`, `height`) | CameraInfo message dimensions | Calibrated/configured |
+| Rectification maps | Built from `K, D, R, P` in left/right camera_info | Calibrated preprocessing |
+| Frame rate (`Camera.fps`) | Estimated from measured left image timing in notebook | Tuned from data |
+| ORB extractor params | `ORBextractor.nFeatures`, `scaleFactor`, `nLevels`, FAST thresholds | Tuned for robustness |
+| Depth threshold (`ThDepth`) | Written into generated settings YAML | Tuned |
+
+## 3) Practical note for report
+
+- In this notebook, ORB-SLAM path generation is done directly from stereo images (not from pre-recorded `/orb_slam/path` topic).
+- Calibration is mainly camera_info-driven; run-to-run changes are mostly in timing and ORB tuning, not intrinsic geometry.
+
+## 4) ORB-SLAM YAML file (what it does)
+
+Yes, ORB-SLAM uses a YAML settings file. In this notebook, that file is generated at runtime (`/tmp/orbslam3_notebook_generated.yaml`) and then passed into `orbslam3_backend.StereoSystem(...)` during initialization.
+
+The YAML tells ORB-SLAM how to interpret the camera stream and how to run tracking. It contains camera geometry (`Camera.fx`, `Camera.fy`, `Camera.cx`, `Camera.cy`, `Camera.width`, `Camera.height`), stereo scale (`Camera.bf`), timing (`Camera.fps`), and tracker behavior (`ORBextractor.*`, `ThDepth`). In short: the vocabulary gives ORB-SLAM the visual words, and the YAML gives ORB-SLAM the camera and tracking configuration needed to convert stereo images into a metric trajectory.
+
+
 ### ekf_fusion (Extended Kalman Filter)
 
 The EKF fusion stage uses the ROS 2 `robot_localization` package (`ekf_node`) to fuse visual odometry from ORB-SLAM 3 with wheel odometry from the differential drive controller into a single, robust pose estimate. The fusion is performed using a discrete-time Extended Kalman Filter that combines the two independent motion sources while exploiting their complementary properties: wheel odometry is locally accurate but subject to drift over long distances, while visual odometry is drift-free but can be noisy and may briefly fail.
