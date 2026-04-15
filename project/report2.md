@@ -295,11 +295,11 @@ ORB-SLAM 3 tracks visual features (ORB keypoints) across consecutive stereo fram
 
 ### ekf_fusion (Extended Kalman Filter)
 
-The `ekf_fusion` node fuses visual odometry from ORB-SLAM 3 with wheel odometry from the differential drive controller into a single, robust pose estimate. The fusion is performed using a discrete-time Extended Kalman Filter that combines the two independent motion sources while exploiting their complementary properties: wheel odometry is locally accurate but subject to drift over long distances, while visual odometry is drift-free but can be noisy and may briefly fail.
+The EKF fusion stage uses the ROS 2 `robot_localization` package (`ekf_node`) to fuse visual odometry from ORB-SLAM 3 with wheel odometry from the differential drive controller into a single, robust pose estimate. The fusion is performed using a discrete-time Extended Kalman Filter that combines the two independent motion sources while exploiting their complementary properties: wheel odometry is locally accurate but subject to drift over long distances, while visual odometry is drift-free but can be noisy and may briefly fail.
 
 The EKF maintains a state vector of robot pose $(\mathbf{x}_k, \mathbf{y}_k, \theta_k)$ and velocity $(\dot{\mathbf{x}}_k, \dot{\mathbf{y}}_k)$. The predict step uses the kinematic model with wheel odometry control inputs (linear and angular velocity from `/cmd_vel`), advancing the state estimate. The update step incorporates visual odometry measurements from ORB-SLAM 3, comparing predicted pose against observed pose and correcting both position and velocity estimates using Kalman gain. Both measurements are weighted by their respective uncertainty covariances, allowing the filter to automatically adapt to changing sensor quality.
 
-**Node:** `ekf_fusion_node`  
+**Node:** `ekf_node` (from `robot_localization`)  
 **Input:** `/odom [nav_msgs/msg/Odometry]` (from differential drive controller), `/vo/odometry [nav_msgs/msg/Odometry]` (from ORB-SLAM 3), `/cmd_vel [geometry_msgs/msg/Twist]` (control input), `/tf` (camera-to-base transform)  
 **Output:** `/fused_odom [nav_msgs/msg/Odometry]`, `/tf` (base_link to odom transform)  
 **Calibration:** Process noise covariance (wheel odometry uncertainty) and measurement noise covariance (visual odometry uncertainty per component) are tuned during integration testing. Time alignment between asynchronous odometry and VO streams is handled using each message `header.stamp`; fixed timestamp offsets, buffering/interpolation windows, and maximum allowed measurement age will alos be  tuned.
