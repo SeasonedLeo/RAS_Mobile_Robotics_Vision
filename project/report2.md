@@ -293,9 +293,9 @@ ORB-SLAM 3 tracks visual features (ORB keypoints) across consecutive stereo fram
 
 **Output format:** The node publishes the current robot pose as a local visual-odometry estimate. The trajectory is relative to the initial startup pose, so accumulated drift and local frame consistency should be expected.
 
-### How ORB-SLAM Was Used and Calibrated (Stereo Pipeline Summary)
+<!-- ### How ORB-SLAM Was Used and Calibrated (Stereo Pipeline Summary)
 
-#### 1) How ORB-SLAM is used in this stereo setup
+#### 1) How ORB-SLAM is used in this stereo setup -->
 
 | Item | What was done |
 |---|---|
@@ -446,117 +446,58 @@ Since the current milestone focuses on perception and decision-making, Nav2 is t
 
 ## 3. Experimental Analysis & Validation
 
-This section validates behavior under realistic conditions and documents robustness.
+This section summarizes current localization behavior, with focus on stereo timing quality and its impact on VO + EKF fusion.
+Main finding: left-right camera timing mismatch is currently the dominant localization issue.
 
 ### 3.1 Noise & Uncertainty Analysis
 
 #### 3.1.1 Hardware Noise / Sensor Calibration
 
-The localization stack uses wheel odometry and stereo visual odometry (VO), so uncertainty appears both from platform motion and image quality.
+Localization uses wheel odometry + stereo VO. Wheel odometry is smooth but drifts over time; VO is more sensitive to lighting, blur, low texture, and left-right timing mismatch.
 
-- Sensor offsets: Camera-to-robot extrinsics are handled through TF (`camera` to `base_link`). VO starts in its own local frame; at startup, this frame is mapped to `odom` so each VO pose is transformed into the `odom` frame before EKF fusion.
-- Variance/noise profiles: Wheel odometry is smooth over short horizons but accumulates drift. VO is sensitive to lighting variation, motion blur, low-texture regions, and left-right timestamp mismatch.
-- Calibration observations: OAK-D factory intrinsics/extrinsics from left and right `camera_info` are sufficient for initial stereo operation. Pose stability degrades when left/right raw images are not well synchronized.
-- Tuning changes made due to noise: The `robot_localization` EKF is tuned with process/measurement covariances, timestamp-based alignment (`header.stamp`), buffering windows, and stale-measurement rejection thresholds.
-
-
-### 3.2 Run-Time Issues
-
-This subsection summarizes behaviors observed during integration runs and current mitigation strategy.
-
-#### 3.2.1 Failure Cases Observed
-
-- Unsynchronized stereo raw images can cause disparity inconsistency, leading to VO pose jitter or short tracking dropouts.
-- Rapid turns and vibration can introduce motion blur and reduce stable feature matches.
-- Low-texture indoor surfaces reduce ORB feature density and can increase VO drift.
-- VO and wheel odometry can arrive with different effective latencies, which can produce EKF lag/overshoot if not time-aligned.
-- Frame-convention mistakes (`camera`, `base_link`, `odom`) can produce systematic pose offsets if transforms are misapplied.
-
-#### 3.2.2 Recovery / Mitigation Logic
-
-- EKF fusion is configured in `robot_localization` with covariance tuning to reduce overconfidence in either odometry source.
-- Fusion uses message `header.stamp` time alignment with buffering/interpolation windows to reduce asynchronous update artifacts.
-- Measurements outside an allowed age window are rejected to avoid fusing stale data.
-- Static TF calibration (`camera` to `base_link`) is verified before runs to ensure consistent frame chaining.
-- During VO tracking loss, operator-level recovery (node restart/reinitialization) is currently used.
-
-#### 3.2.3 Remaining Limitations
-
-- Full quantitative error benchmarking (trajectory RMSE, drift per meter, yaw drift) is not finalized in this milestone.
-- Hardware-level stereo synchronization is not yet finalized; current tests may include residual left-right timing mismatch.
-- The VO pipeline is local (startup-referenced) and does not provide global map consistency.
-- Nav2 closed-loop execution with fused localization is still pending final integration.
-
-### 3.3 Milestone Video
-
-- Video 1: VO + EKF localization demo (RViz + topic outputs) [insert link]
-- Video 2: Active perception loop demo (pose estimation + confidence + NBV) [insert link]
-
-# Experimental Analysis & Validation
-
-Focus of this section is left/right camera timing quality and how it affects stereo VO.
-
-## 3.1 Noise & Uncertainty Analysis
-
-### 3.1.1 Hardware Noise / Sensor Calibration
-
-Stereo processing used:
+Stereo topics used:
 - `/robot_10/oakd/left/image_raw`
 - `/robot_10/oakd/right/image_raw`
 - `/robot_10/oakd/left/camera_info`
 - `/robot_10/oakd/right/camera_info`
 
-Timing span from notebook:
-- `left span [sec]  : 76.087`
-- `right span [sec] : 74.854`
-- `odom span [sec]  : 79.601`
+Measured timing summary from the notebook:
+- Stream span: left `76.087 s`, right `74.854 s`, odom `79.601 s` (right ends ~`1.23 s` earlier).
+- Mean frame interval: left `119.634 ms`, right `128.837 ms`, odom `54.521 ms`.
+- Left-right pairing error (`50 ms` slop): mean `17.92 ms`, median `33.30 ms`, p95 `33.36 ms`, max `33.36 ms`.
 
-What this shows:
-- Left and right streams do not run with identical coverage in time.
-- The right stream ends earlier than the left stream by about `1.23 s`.
-- This creates fewer usable stereo pairs in later parts of the run.
+In many frames, the left and right images are about `33 ms` apart. During robot motion, this offset is large enough to hurt stereo depth matching and make VO tracking less stable.
 
-Measured frame timing (from notebook matrices):
-- Left frame interval mean: `119.634 ms`
-- Right frame interval mean: `128.837 ms`
-- Odom interval mean: `54.521 ms`
-- Left/right pairing was performed using image `header.stamp` timestamps (with bag timestamp fallback only if header time is missing).
+<!-- Camera-to-robot extrinsics are handled through TF (`camera` to `base_link`). VO starts in a local frame, then is mapped to `odom` at startup so EKF fusion runs in one frame. EKF (`robot_localization`) tuning uses process/measurement covariance, `header.stamp` alignment, buffering/interpolation, and stale-measurement rejection. -->
 
-Measured left-right pairing error (with `50 ms` pairing slop):
-- mean: `17.92 ms`
-- median: `33.30 ms`
-- p95: `33.36 ms`
-- max: `33.36 ms`
+### 3.2 Run-Time Issues
 
-What these numbers mean:
-- The mean (`17.92 ms`) looks moderate, but the distribution is not centered near zero.
-- Median and p95 are both around `33 ms`, which means many accepted pairs are near that offset, not just rare outliers.
-- With left/right frame intervals around `120–129 ms`, a `~33 ms` offset is about a quarter to a third of one frame period.
-- For stereo depth, that is large enough that moving objects (or robot motion) can shift noticeably between the two images, reducing disparity consistency.
-- This matches the observed behavior: unstable depth support and repeated ORB-SLAM tracking resets.
+#### 3.2.1 Failure Cases Observed
 
-## 3.2 Run-Time Issues
+- Left-right timestamp offset (~`33 ms`) -> stereo mismatch -> VO jitter.
+- Fast turns/vibration -> motion blur -> fewer stable ORB matches.
+- Low-texture scenes -> weak feature tracking -> higher VO drift.
+- VO tracking degradation -> repeated `Fail to track local map` events and map resets.
+- VO/wheel odometry latency mismatch -> EKF lag or overshoot without proper time alignment.
 
-### 3.2.1 Failure Cases Observed
+#### 3.2.2 Recovery / Mitigation Logic
 
-- Left-right timestamps are frequently offset by `~33 ms`, especially in the upper tail.
-- Because stereo depth depends on matching the same scene instant, this offset creates disparity error when the robot moves.
-- ORB-SLAM then shows repeated `Fail to track local map` behavior and map resets.
-- The resulting trajectory can look compressed near the origin when reset segments are plotted together.
+- Pair left/right images using `header.stamp`, and track mean/median/p95 pairing error each run.
+- Tighten sync tolerance toward `10-20 ms`, then compare retained pair count vs VO stability.
+- Keep camera calibration fixed while tuning timing first, so timing remains the isolated variable.
+- Use EKF covariance tuning plus stale-measurement rejection to limit fusion instability.
 
-### 3.2.2 Recovery / Mitigation Logic
+#### 3.2.3 Remaining Limitations
 
-- Use strict timestamp-based pairing from `header.stamp` for left and right images.
-- Keep reporting mean/median/p95 pairing error in each run (already in notebook).
-- Reduce sync tolerance toward `10–20 ms` and compare resulting pair count vs tracking quality.
-- Keep calibration from camera_info fixed while tuning only timing first (to isolate root cause).
+- Hardware-level stereo synchronization is not finalized.
+- Current bags are sufficient for analysis, but not yet for stable continuous VO in all runs.
+- Final quantitative metrics (RMSE, drift per meter, yaw drift) are still pending.
+- Nav2 closed-loop integration with fused localization is still pending.
 
-### 3.2.3 Remaining Limitations
+### 3.3 Milestone Video
 
-- Hardware-level stereo synchronization is still not finalized.
-- Current bag quality is enough for analysis, but not yet clean enough for stable continuous ORB-SLAM tracking.
-- Final benchmark metrics should be generated after improving left-right timing quality first.
-
+- Video 1: VO + EKF localization demo (RViz + topic outputs) [insert link]
+- Video 2: Active perception loop demo (pose estimation + confidence + NBV) [insert link]
 
 ---
 
@@ -584,3 +525,4 @@ This section documents feedback integration and individual contributions.
 | `Vikas Narang` | `Localization_Module (VO + EKF)` | `[commit/PR link]` | `[file paths]` | `[TODO: notes]` |
 
 ---
+
