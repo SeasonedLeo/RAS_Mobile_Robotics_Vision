@@ -254,15 +254,75 @@ Therefore, the planner does not solve a continuous optimization problem; it samp
 
 ### orchestrator
 
-The `orchestrator` is the coordination layer for the active perception loop. It subscribes to the streaming pose outputs from the pose estimator and stores a bounded history of recent pose samples. Once enough samples have been collected, it calls the `confidence_evaluator` service. If confidence is sufficiently high, the loop terminates. Otherwise, it calls the `nbv_planner` service to request a new goal in `odom`.
+The `orchestrator` is the coordination layer for the active perception loop. It subscribes to the streaming pose outputs from the pose estimator and stores a bounded history of recent pose samples. with at least one sample, it calls the `confidence_evaluator` service. If confidence is sufficiently high, the loop terminates. Otherwise, it calls the `nbv_planner` service to request a new goal in `odom`.
 
-This node is responsible for turning a collection of independent modules into a closed-loop behavior. Rather than embedding all processing in a single monolithic node, the orchestrator keeps module boundaries explicit and manages when each service should be invoked. This makes the system easier to test incrementally and leaves a clean insertion point for the final Nav2 action handoff.
+In detail, the orchestrator uses a state-machine approach, and defines the following states: IDLE, WAITING_FOR_POSE, EVALUATING, PLANNING_NBV, READY_TO_NAVIGATE, DONE. Each new sample is appended to this history and, provided the system is not already evaluating or planning, triggers a confidence-evaluation service request. The request contains the full current history window along with the desired confidence threshold and minimum history length. If the returned confidence response indicates that estimation is sufficiently reliable, the orchestrator transitions to a terminal DONE state. Otherwise, it constructs and sends a next-best-view planning request using the latest target pose and robot pose. The NBV response is then stored as the next candidate navigation goal, and the orchestrator transitions to a READY_TO_NAVIGATE state. In the current implementation, the actual Nav2 call is marked as a TODO, so the orchestration logic ends at NBV selection rather than full closed-loop execution.
 
 ### custom interfaces
 
-The custom interfaces are used to keep data exchange structured and explicit. `PoseEstimateSample.msg` carries pose information together with quality-related metadata that would be awkward to infer downstream from a bare pose topic. `EvaluatePoseConfidence.srv` defines the contract between the orchestrator and the confidence evaluator, while `PlanNBV.srv` defines the contract for viewpoint generation.
+Custom ROS2 interfaces are used to encapsulate system-specific data and decision structures that are not represented by standard message types. In particular, the `PoseEstimateSample` message extends a basic pose representation with additional quality metrics such as point count, anisotropy ratio, and yaw estimation source, enabling downstream modules to reason about estimation reliability. Similarly, the `EvaluatePoseConfidence` and `PlanNBV` services define clear request–response interfaces for decision-making components.
 
-These interfaces are an important part of the system design because they formalize what information is exchanged between estimation, decision making, and planning. In addition to improving modularity, they make the ROS 2 graph easier to interpret and reduce ambiguity in how intermediate data products are represented.
+#### PoseEstimateSample.msg
+
+| Field | Type |
+|------|------|
+| header | std_msgs/Header |
+| pose | geometry_msgs/Pose |
+| point_count | int32 |
+| anisotropy_ratio | float32 |
+| yaw_source | string |
+
+---
+
+#### EvaluatePoseConfidence.srv
+
+**Request**
+
+| Field | Type |
+|------|------|
+| history | PoseEstimateSample[] |
+| desired_confidence_threshold | float32 |
+| min_history_length | int32 |
+
+**Response**
+
+| Field | Type |
+|------|------|
+| success | bool |
+| confidence_score | float32 |
+| position_variance | float32 |
+| yaw_variance | float32 |
+| mean_point_count | float32 |
+| mean_anisotropy_ratio | float32 |
+| should_stop | bool |
+| should_plan_nbv | bool |
+| diagnostic_message | string |
+
+---
+
+#### PlanNBV.srv
+
+**Request**
+
+| Field | Type |
+|------|------|
+| target_pose | geometry_msgs/PoseStamped |
+| robot_pose | geometry_msgs/PoseStamped |
+| num_candidates | int32 |
+| radius | float32 |
+| min_radius | float32 |
+| max_radius | float32 |
+| use_adaptive_radius | bool |
+
+**Response**
+
+| Field | Type |
+|------|------|
+| success | bool |
+| selected_index | int32 |
+| candidate_views | geometry_msgs/PoseArray |
+| best_view | geometry_msgs/PoseStamped |
+| diagnostic_message | string |
 
 
 
