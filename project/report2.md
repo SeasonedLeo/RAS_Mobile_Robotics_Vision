@@ -24,7 +24,7 @@ This report documents the transition from system design to implementation for th
 
 ## 1. Kinematics
 
-This section must formally describe the robot motion model using LaTeX equations, explicitly mapping control inputs to state updates.
+<!-- This section must formally describe the robot motion model using LaTeX equations, explicitly mapping control inputs to state updates. -->
 
 The kinematics model governs how the robot's state (position and orientation) evolves over time in response to control commands. It provides the mathematical foundation for motion planning and state estimation, connecting what we command (velocity inputs) to what actually happens (pose updates).
 
