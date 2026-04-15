@@ -410,4 +410,3 @@ This section documents feedback integration and individual contributions.
 | `[Name]` | `[TODO: role]` | `[commit/PR link]` | `[file paths]` | `[TODO: notes]` |
 
 ---
-
