@@ -1,4 +1,5 @@
----layout: default
+---
+layout: default
 math: mathjax
 title: "Report 2"
 parent: Project
