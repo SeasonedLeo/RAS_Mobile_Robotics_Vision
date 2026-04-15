@@ -33,24 +33,38 @@ This section must formally describe the robot motion model using LaTeX equations
 
 **Placeholder guidance:** Define the state vector, reference frames, and the kinematic model used for implementation.
 
+The robot state is represented in the odometry frame (`odom`) with the state vector:
+
 $$
-\text{TODO: Insert robot motion model equation(s), e.g., } \dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})
+\mathbf{x} = \begin{bmatrix} x \\ y \\ \theta \end{bmatrix}
 $$
 
-**Short explanation placeholder:** Briefly explain what each state variable and model term represents, and why this model is appropriate for the platform.
+where $(x, y)$ is the robot's position in the global frame and $\theta$ is its orientation (yaw angle). The continuous-time differential drive kinematics are:
+
+$$
+\begin{aligned}
+\dot{x} &= v \cos(\theta) \\
+\dot{y} &= v \sin(\theta) \\
+\dot{\theta} &= \omega
+\end{aligned}
+$$
+
+The state variables represent the robot's 2D pose in the planning frame. The model is appropriate for a differential drive platform, where forward motion is coupled with rotation through the control inputs.
 
 ### 1.2 Control Inputs
 
 <!-- TODO: Identify the commanded inputs used by the controller or middleware interface. -->
 <!-- TODO: Validate that the chosen inputs match the deployed ROS 2 control interface. -->
 
-**Placeholder guidance:** Specify the control inputs used by the robot and how they correspond to commanded motion.
+Specify the control inputs used by the robot and how they correspond to commanded motion.
 
 $$
-\text{TODO: Insert control input definition, e.g., } \mathbf{u} = [u_1, u_2]^\top
+\mathbf{u} = \begin{bmatrix} v \\ \omega \end{bmatrix}
 $$
 
-**Short explanation placeholder:** Clarify whether the implementation uses linear/angular velocity, wheel velocities, or another control representation.
+where $v$ is the commanded linear velocity (m/s) and $\omega$ is the commanded angular velocity (rad/s).
+
+The implementation uses linear and angular velocity commands via the ROS 2 geometry_msgs/Twist interface streamed to the differential drive controller.
 
 ### 1.3 State Update Equations
 
@@ -59,11 +73,17 @@ $$
 
 **Placeholder guidance:** Show how the selected control inputs propagate the robot state over one time step.
 
+The discrete-time state updates using first-order Euler integration with time step $\Delta t$ are:
+
 $$
-\text{TODO: Insert discrete-time update equation(s), e.g., } \mathbf{x}_{k+1} = f(\mathbf{x}_k, \mathbf{u}_k, \Delta t)
+\begin{aligned}
+x_{k+1} &= x_k + v_k \cos(\theta_k) \Delta t \\
+y_{k+1} &= y_k + v_k \sin(\theta_k) \Delta t \\
+\theta_{k+1} &= \theta_k + \omega_k \Delta t
+\end{aligned}
 $$
 
-**Short explanation placeholder:** Describe how the continuous or nominal model is converted into the update form used in code.
+The discrete updates are derived from Euler integration of the continuous kinematics model. The time step $\Delta t$ corresponds to the control execution rate of the differential drive controller and the EKF fusion update.
 
 ---
 
