@@ -335,16 +335,7 @@ In simple terms, this YAML tells ORB-SLAM three things: camera geometry, stereo 
 <!-- Without this YAML, ORB-SLAM may still run, but pose quality and depth scale can be wrong. -->
 
 
-The EKF also uses a YAML file (`ORB_EKF/config/ekf.yaml`) to define how fusion is performed in `robot_localization`.
 
-This YAML decides which inputs are fused, which state variables are trusted from each input, and how much confidence to assign to each source. In our setup, it maps wheel odometry (`/odom`) and visual odometry (`/vo/odometry`) into one consistent fused estimate.
-
-Key fields in the EKF YAML are:
-- Frame and mode settings (`two_d_mode`, `world_frame`, `odom_frame`, `base_link_frame`).
-- Sensor wiring (`odom0`, `odom1`) and which variables to fuse (`odom0_config`, `odom1_config`).
-- Filter timing and robustness (`frequency`, `sensor_timeout`, queue sizes, rejection thresholds).
-
-So the ORB YAML controls how VO is produced, and the EKF YAML controls how VO and wheel odometry are fused.
 
 ### ekf_fusion (Extended Kalman Filter)
 
@@ -358,6 +349,17 @@ The EKF maintains a state vector of robot pose $(\mathbf{x}_k, \mathbf{y}_k, \th
 **Calibration:** Process noise covariance (wheel odometry uncertainty) and measurement noise covariance (visual odometry uncertainty per component) are tuned during integration testing. Time alignment between asynchronous odometry and VO streams is handled using each message `header.stamp`; fixed timestamp offsets, buffering/interpolation windows, and maximum allowed measurement age will alos be  tuned. -->
 
 The EKF publishes a fused odometry message at 5 Hz containing the best estimate of robot pose, linear velocity, and twist (velocity and angular velocity), along with full covariance matrices for both position and velocity. The transform tree is updated to reflect the corrected base_link position in the odom frame, enabling all downstream planners and controllers to access consistent localization.
+
+The EKF also uses a YAML file (`ORB_EKF/config/ekf.yaml`) to define how fusion is performed in `robot_localization`.
+
+This YAML decides which inputs are fused, which state variables are trusted from each input, and how much confidence to assign to each source. In our setup, it maps wheel odometry (`/odom`) and visual odometry (`/vo/odometry`) into one consistent fused estimate.
+
+Key fields in the EKF YAML are:
+- Frame and mode settings (`two_d_mode`, `world_frame`, `odom_frame`, `base_link_frame`).
+- Sensor wiring (`odom0`, `odom1`) and which variables to fuse (`odom0_config`, `odom1_config`).
+- Filter timing and robustness (`frequency`, `sensor_timeout`, queue sizes, rejection thresholds).
+
+So the ORB YAML controls how VO is produced, and the EKF YAML controls how VO and wheel odometry are fused.
 
 The VO measurement is aligned to the EKF world frame (`odom`) before fusion:
 
@@ -498,8 +500,9 @@ In many frames, the left and right images are about `33 ms` apart. During robot 
 
 - Pair left/right images using `header.stamp`, and track mean/median/p95 pairing error each run.
 - Tighten sync tolerance toward `10-20 ms`, then compare retained pair count vs VO stability.
-- Keep camera calibration fixed while tuning timing first, so timing remains the isolated variable.
-- Use EKF covariance tuning plus stale-measurement rejection to limit fusion instability.
+- improve data collection ROS bags ( in progress)
+<!-- - Keep camera calibration fixed while tuning timing first, so timing remains the isolated variable. -->
+<!-- - Use EKF covariance tuning plus stale-measurement rejection to limit fusion instability. -->
 
 #### 3.2.3 Remaining Limitations
 
@@ -536,7 +539,7 @@ This section documents feedback integration and individual contributions.
 | Team Member | Primary Technical Role | Key Git Commits / PRs | Specific File(s) Authorship | Notes |
 | :--- | :--- | :--- | :--- | :--- |
 | `Mohammad Nasr` | `Perception_Module` | `[970c915,b180cfd, 4a9a162, 03b2bf6 (For report)]` | `cylinder finder, box_finder, pose_estimator,orchestrator,nbv_planner,confidence_evaluator` | `all nodes need to be tested on real data/robot` |
-| `Vikas Narang` | `Localization_Module (VO + EKF)` | `[commit/PR link]` | `[file paths]` | `[TODO: notes]` |
+| `Vikas Narang` | `Localization_Module (VO + EKF)` | `[1 parent 3b519bc commit 61fc196 (For report)]` | `orb_vo_node.py, orb_vo.yaml, ekf.yaml` | `all nodes need to be tested on real data/robot` ||
 
 ---
 
