@@ -406,7 +406,7 @@ This section documents feedback integration and individual contributions.
 
 | Team Member | Primary Technical Role | Key Git Commits / PRs | Specific File(s) Authorship | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `Mohammad Nasr` | `Perception_Module` | `[commit/PR link]` | `cylinder finder, box_finder, pose_estimator,orchestrator,nbv_planner,confidence_evaluator` | `all nodes need to be tested on real data/robot` |
+| `Mohammad Nasr` | `Perception_Module` | `[970c915,b180cfd, 4a9a162, 03b2bf6 (For report)]` | `cylinder finder, box_finder, pose_estimator,orchestrator,nbv_planner,confidence_evaluator` | `all nodes need to be tested on real data/robot` |
 | `[Name]` | `[TODO: role]` | `[commit/PR link]` | `[file paths]` | `[TODO: notes]` |
 
 ---
