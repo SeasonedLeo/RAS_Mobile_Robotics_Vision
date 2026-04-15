@@ -1,5 +1,4 @@
----
-layout: default
+---layout: default
 math: mathjax
 title: "Report 2"
 parent: Project
@@ -192,7 +191,8 @@ This section provides a detailed explanation on Modules and their logic.
 | Module Type | Nodes | Inputs and Outputs | Key Parameters | Source | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Perception | `cylinder_finder`, `box_finder`, `pose_estimator` | **Input:** `/oakd/points [sensor_msgs/msg/PointCloud2]`, `/active_perception/target_cloud [sensor_msgs/msg/PointCloud2]`, `/tf`, `/tf_static`  **Output:** `/active_perception/target_cloud [sensor_msgs/msg/PointCloud2]`, `/active_perception/target_pose [geometry_msgs/msg/PoseStamped]`, `/active_perception/pose_estimate_sample [active_perception_interfaces/msg/PoseEstimateSample]`, `viz/detections [visualization_msgs/msg/MarkerArray]`, target markers | Segmentation thresholds, clustering limits, fitting tolerances, `target_frame`, PCA anisotropy threshold, minimum point count | [`cylinder_finder.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/cylinder_finder.py), [`box_finder.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/box_finder.py), [`pose_estimator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/pose_estimator.py) | Implemented |
-| Estimation and localization | `Visual Odometry`, `EKF` | **Input:** [TBD]  **Output:** `/odom [nav_msgs/msg/Odometry]` | [TBD] | [TBD] | In progress |
+| Estimation (VO) | `visual_odometry_node` (ORB-SLAM 3) | **Input:** `/oakd/left/image_raw [sensor_msgs/msg/Image]`, `/oakd/right/image_raw [sensor_msgs/msg/Image]`, `/oakd/left/camera_info [sensor_msgs/msg/CameraInfo]`, `/oakd/right/camera_info [sensor_msgs/msg/CameraInfo]`, `/tf`, `/tf_static`  **Output:** `/vo/pose [geometry_msgs/msg/PoseStamped]`, `/vo/odometry [nav_msgs/msg/Odometry]` | `ORBvoc.txt`, stereo YAML (`fx, fy, cx, cy, baseline`), `sync_slop`, `max_sync_delta_ms`, startup `VO->odom` alignment | `ORB_EKF/orb_ekf/orb_vo_node.py`, `ORB_EKF/config/orb_vo.yaml` | Implemented |
+| Localization / Fusion (EKF) | `ekf_node` (`robot_localization`) | **Input:** `/odom [nav_msgs/msg/Odometry]`, `/vo/odometry [nav_msgs/msg/Odometry]`, `/tf`  **Output:** `/fused_odom [nav_msgs/msg/Odometry]`, `/odometry/filtered [nav_msgs/msg/Odometry]`, `/tf` (`odom` to `base_link`) | `two_d_mode`, `frequency`, `sensor_timeout`, `odom0/odom1_config`, process and measurement covariance tuning | `ORB_EKF/config/ekf.yaml`, ROS 2 `robot_localization` | Implemented (not tested) |
 | Planning | `confidence_evaluator` | **Input:** `/active_perception/evaluate_pose_confidence [active_perception_interfaces/srv/EvaluatePoseConfidence]`  **Output:** confidence score, stop flag, NBV flag, diagnostic metrics | Stability weights, variance normalization terms, confidence threshold, recency weighting | [`confidence_evaluator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/confidence_evaluator.py) | Implemented |
 | Planning | `nbv_planner` | **Input:** `/active_perception/plan_nbv [active_perception_interfaces/srv/PlanNBV]`, `/tf`  **Output:** next best view in `odom`, `/active_perception/nbv_markers [visualization_msgs/msg/MarkerArray]` | `planning_frame`, candidate count, radius bounds, utility weights | [`nbv_planner.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/nbv_planner.py) | Implemented |
 | Planning / coordination | `orchestrator` | **Input:** `/active_perception/target_pose [geometry_msgs/msg/PoseStamped]`, `/active_perception/pose_estimate_sample [active_perception_interfaces/msg/PoseEstimateSample]`, `/odom [nav_msgs/msg/Odometry]`  **Output:** service calls to confidence evaluation and NBV planning, planned Nav2 goal handoff | `history_size`, desired confidence threshold, minimum history length, NBV radius and candidate settings | [`orchestrator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/orchestrator.py) | Implemented, Nav2 integration pending |
@@ -282,22 +282,22 @@ In detail, the orchestrator uses a state-machine approach, and defines the follo
 
 ### visual_odometry (ORB-SLAM 3)
 
-The `visual_odometry` node implements ORB-SLAM 3 for real-time camera-based localization and TurtleBot 4 motion estimation using the Python wrapper `python-orb-slam3==0.1.1`. The node subscribes to stereo monochrome raw images from the OAK-D left and right cameras (`/oakd/left/image_raw` and `/oakd/right/image_raw`) and computes the camera pose and sparse 3D map incrementally as the robot moves.
+The `visual_odometry` node implements ORB-SLAM 3 for real-time camera-based localization and TurtleBot 4 motion estimation using a Python wrapper. The node subscribes to stereo monochrome raw images from the OAK-D left and right cameras (`/oakd/left/image_raw` and `/oakd/right/image_raw`) and computes the camera pose and sparse 3D map incrementally as the robot moves.
 
 ORB-SLAM 3 tracks visual features (ORB keypoints) across consecutive stereo frames and estimates camera motion through feature matching, stereo triangulation, and bundle adjustment. The output is the camera pose (position and orientation) estimated in the camera frame and then transformed to the robot frame using TF, published at the incoming camera rate (subject to compute and sensor latency).
-
+<!-- 
 **Node:** `visual_odometry_node`  
 **Input:** `/oakd/left/image_raw [sensor_msgs/msg/Image]`, `/oakd/right/image_raw [sensor_msgs/msg/Image]`, `/oakd/left/camera_info [sensor_msgs/msg/CameraInfo]`, `/oakd/right/camera_info [sensor_msgs/msg/CameraInfo]`  
 **Output:** `/vo/pose [geometry_msgs/msg/PoseStamped]` (current robot pose estimate from local visual odometry, relative to the initial pose at startup)  
-**Calibration:** Left/right camera intrinsics (focal length, principal point, distortion coefficients), stereo extrinsics, and baseline are obtained from the OAK-D calibration and consumed from `/oakd/left/camera_info` and `/oakd/right/camera_info`. No additional manual calibration is performed.
+**Calibration:** Left/right camera intrinsics (focal length, principal point, distortion coefficients), stereo extrinsics, and baseline are obtained from the OAK-D calibration and consumed from `/oakd/left/camera_info` and `/oakd/right/camera_info`. No additional manual calibration is performed. -->
 
-**Output format:** The node publishes the current robot pose as a local visual-odometry estimate. The trajectory is relative to the initial startup pose, so accumulated drift and local frame consistency should be expected.
+The node publishes the current robot pose as a local visual-odometry estimate. The trajectory is relative to the initial startup pose, so accumulated drift and local frame consistency should be expected.
 
-<!-- ### How ORB-SLAM Was Used and Calibrated (Stereo Pipeline Summary)
+<!-- <!-- ### How ORB-SLAM Was Used and Calibrated (Stereo Pipeline Summary)
 
 #### 1) How ORB-SLAM is used in this stereo setup -->
 
-| Item | What was done |
+<!-- | Item | What was done |
 |---|---|
 | Input data | Stereo images from `/robot_10/oakd/left/image_raw` and `/robot_10/oakd/right/image_raw` |
 | Time pairing | Left/right paired by `header.stamp` (bag timestamp only as fallback) |
@@ -305,9 +305,9 @@ ORB-SLAM 3 tracks visual features (ORB keypoints) across consecutive stereo fram
 | ORB-SLAM backend | `orbslam3_backend.StereoSystem(...)` initialized before frame processing |
 | Tracking call | `track_stereo(left_rect, right_rect, timestamp_sec)` per paired frame |
 | Pose output used | `T_cw` converted to world pose (`inv(T_cw)`), then XY trajectory plotted |
-| Result shown | ORB path plot, position-vs-time plot, and scaled overlay against odom |
+| Result shown | ORB path plot, position-vs-time plot, and scaled overlay against odom | -->
 
-### 2) How calibration/settings were handled
+<!-- ### 2) How calibration/settings were handled
 
 | Parameter group | Source in setup | Status |
 |---|---|---|
@@ -317,20 +317,34 @@ ORB-SLAM 3 tracks visual features (ORB keypoints) across consecutive stereo fram
 | Rectification maps | Built from `K, D, R, P` in left/right camera_info | Calibrated preprocessing |
 | Frame rate (`Camera.fps`) | Estimated from measured image timing in the run data | Tuned from data |
 | ORB extractor params | `ORBextractor.nFeatures`, `scaleFactor`, `nLevels`, FAST thresholds | Tuned for robustness |
-| Depth threshold (`ThDepth`) | Written into generated settings YAML | Tuned |
+| Depth threshold (`ThDepth`) | Written into generated settings YAML | Tuned | -->
 
-#### 3) Practical note for report
+<!-- #### 3) Practical note for report
 
 - ORB-SLAM path generation is done directly from stereo images (not from pre-recorded `/orb_slam/path` topic).
-- Calibration is mainly camera_info-driven; run-to-run changes are mostly in timing and ORB tuning, not intrinsic geometry.
-
-## 4) ORB-SLAM YAML file (what it does)
-
-Yes, ORB-SLAM uses a YAML settings file. In this setup, that file is generated/loaded at runtime and then passed into `orbslam3_backend.StereoSystem(...)` during initialization.
-
-The YAML tells ORB-SLAM how to interpret the camera stream and how to run tracking. It contains camera geometry (`Camera.fx`, `Camera.fy`, `Camera.cx`, `Camera.cy`, `Camera.width`, `Camera.height`), stereo scale (`Camera.bf`), timing (`Camera.fps`), and tracker behavior (`ORBextractor.*`, `ThDepth`). In short: the vocabulary gives ORB-SLAM the visual words, and the YAML gives ORB-SLAM the camera and tracking configuration needed to convert stereo images into a metric trajectory.
+- Calibration is mainly camera_info-driven; run-to-run changes are mostly in timing and ORB tuning, not intrinsic geometry. -->
 
 
+ORB-SLAM needs a YAML settings file so it knows how to read the stereo cameras correctly. This file is loaded at startup and passed to `orbslam3_backend.StereoSystem(...)`.
+
+In simple terms, this YAML tells ORB-SLAM three things: camera geometry, stereo setup, and tracking behavior.
+- Camera geometry: focal lengths, principal point, and image size (`Camera.fx`, `Camera.fy`, `Camera.cx`, `Camera.cy`, `Camera.width`, `Camera.height`).
+- Stereo setup: baseline/depth scale (`Camera.bf`).
+- Runtime behavior: frame rate and ORB extraction/tracking parameters (`Camera.fps`, `ORBextractor.*`, `ThDepth`).
+
+<!-- Without this YAML, ORB-SLAM may still run, but pose quality and depth scale can be wrong. -->
+
+
+The EKF also uses a YAML file (`ORB_EKF/config/ekf.yaml`) to define how fusion is performed in `robot_localization`.
+
+This YAML decides which inputs are fused, which state variables are trusted from each input, and how much confidence to assign to each source. In our setup, it maps wheel odometry (`/odom`) and visual odometry (`/vo/odometry`) into one consistent fused estimate.
+
+Key fields in the EKF YAML are:
+- Frame and mode settings (`two_d_mode`, `world_frame`, `odom_frame`, `base_link_frame`).
+- Sensor wiring (`odom0`, `odom1`) and which variables to fuse (`odom0_config`, `odom1_config`).
+- Filter timing and robustness (`frequency`, `sensor_timeout`, queue sizes, rejection thresholds).
+
+So the ORB YAML controls how VO is produced, and the EKF YAML controls how VO and wheel odometry are fused.
 
 ### ekf_fusion (Extended Kalman Filter)
 
@@ -338,12 +352,12 @@ The EKF fusion stage uses the ROS 2 `robot_localization` package (`ekf_node`) to
 
 The EKF maintains a state vector of robot pose $(\mathbf{x}_k, \mathbf{y}_k, \theta_k)$ and velocity $(\dot{\mathbf{x}}_k, \dot{\mathbf{y}}_k)$. The predict step uses the kinematic model with wheel odometry control inputs (linear and angular velocity from `/cmd_vel`), advancing the state estimate. The update step incorporates visual odometry measurements from ORB-SLAM 3, comparing predicted pose against observed pose and correcting both position and velocity estimates using Kalman gain. Both measurements are weighted by their respective uncertainty covariances, allowing the filter to automatically adapt to changing sensor quality.
 
-**Node:** `ekf_node` (from `robot_localization`)  
+<!-- **Node:** `ekf_node` (from `robot_localization`)  
 **Input:** `/odom [nav_msgs/msg/Odometry]` (from differential drive controller), `/vo/odometry [nav_msgs/msg/Odometry]` (from ORB-SLAM 3), `/cmd_vel [geometry_msgs/msg/Twist]` (control input), `/tf` (camera-to-base transform)  
 **Output:** `/fused_odom [nav_msgs/msg/Odometry]`, `/tf` (base_link to odom transform)  
-**Calibration:** Process noise covariance (wheel odometry uncertainty) and measurement noise covariance (visual odometry uncertainty per component) are tuned during integration testing. Time alignment between asynchronous odometry and VO streams is handled using each message `header.stamp`; fixed timestamp offsets, buffering/interpolation windows, and maximum allowed measurement age will alos be  tuned.
+**Calibration:** Process noise covariance (wheel odometry uncertainty) and measurement noise covariance (visual odometry uncertainty per component) are tuned during integration testing. Time alignment between asynchronous odometry and VO streams is handled using each message `header.stamp`; fixed timestamp offsets, buffering/interpolation windows, and maximum allowed measurement age will alos be  tuned. -->
 
-**Output format:** The EKF publishes a fused odometry message at 5 Hz containing the best estimate of robot pose, linear velocity, and twist (velocity and angular velocity), along with full covariance matrices for both position and velocity. The transform tree is updated to reflect the corrected base_link position in the odom frame, enabling all downstream planners and controllers to access consistent localization.
+The EKF publishes a fused odometry message at 5 Hz containing the best estimate of robot pose, linear velocity, and twist (velocity and angular velocity), along with full covariance matrices for both position and velocity. The transform tree is updated to reflect the corrected base_link position in the odom frame, enabling all downstream planners and controllers to access consistent localization.
 
 The VO measurement is aligned to the EKF world frame (`odom`) before fusion:
 
