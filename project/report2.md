@@ -26,12 +26,14 @@ This report documents the transition from system design to implementation for th
 
 This section must formally describe the robot motion model using LaTeX equations, explicitly mapping control inputs to state updates.
 
+The kinematics model governs how the robot's state (position and orientation) evolves over time in response to control commands. It provides the mathematical foundation for motion planning and state estimation, connecting what we command (velocity inputs) to what actually happens (pose updates).
+
 ### 1.1 Robot Motion Model
 
 <!-- TODO: State the robot configuration variables and define the coordinate frame convention. -->
 <!-- TODO: Derive the motion model appropriate for the robot base used in this project. -->
 
-**Placeholder guidance:** Define the state vector, reference frames, and the kinematic model used for implementation.
+<!-- **Placeholder guidance:** Define the state vector, reference frames, and the kinematic model used for implementation. -->
 
 The robot state is represented in the odometry frame (`odom`) with the state vector:
 
@@ -71,7 +73,7 @@ The implementation uses linear and angular velocity commands via the ROS 2 geome
 <!-- TODO: Derive the discrete-time state update equations used in software. -->
 <!-- TODO: Confirm the update step matches the controller or estimator execution rate. -->
 
-**Placeholder guidance:** Show how the selected control inputs propagate the robot state over one time step.
+<!-- **Placeholder guidance:** Show how the selected control inputs propagate the robot state over one time step. -->
 
 The discrete-time state updates using first-order Euler integration with time step $\Delta t$ are:
 
