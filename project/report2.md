@@ -413,45 +413,45 @@ This section validates behavior under realistic conditions and documents robustn
 
 #### 3.1.1 Hardware Noise / Sensor Calibration
 
-<!-- TODO: Summarize measured or observed hardware noise characteristics. -->
-<!-- TODO: Document any calibration procedure performed before experiments. -->
+The localization stack uses wheel odometry and stereo visual odometry (VO), so uncertainty appears both from platform motion and image quality.
 
-- Sensor offsets: [TODO: Record observed biases, frame offsets, or calibration corrections.]
-- Variance/noise profiles: [TODO: Summarize measurement variance, drift, or instability.]
-- Calibration observations: [TODO: Note what improved or remained problematic after calibration.]
-- Tuning changes made due to noise: [TODO: Document filtering, thresholds, or parameter updates.]
+- Sensor offsets: Camera-to-robot extrinsics are handled through TF (`camera` to `base_link`). VO starts in its own local frame; at startup, this frame is mapped to `odom` so each VO pose is transformed into the `odom` frame before EKF fusion.
+- Variance/noise profiles: Wheel odometry is smooth over short horizons but accumulates drift. VO is sensitive to lighting variation, motion blur, low-texture regions, and left-right timestamp mismatch.
+- Calibration observations: OAK-D factory intrinsics/extrinsics from left and right `camera_info` are sufficient for initial stereo operation. Pose stability degrades when left/right raw images are not well synchronized.
+- Tuning changes made due to noise: The `robot_localization` EKF is tuned with process/measurement covariances, timestamp-based alignment (`header.stamp`), buffering windows, and stale-measurement rejection thresholds.
 
 
 ### 3.2 Run-Time Issues
 
-**Placeholder guidance:** Document behaviors observed during implementation runs, integration tests, or milestone demonstrations.
+This subsection summarizes behaviors observed during integration runs and current mitigation strategy.
 
 #### 3.2.1 Failure Cases Observed
 
-<!-- TODO: List representative failure cases encountered during testing. -->
-
-**Short explanation placeholder:** Describe the most important failure modes observed during execution without overstating conclusions.
+- Unsynchronized stereo raw images can cause disparity inconsistency, leading to VO pose jitter or short tracking dropouts.
+- Rapid turns and vibration can introduce motion blur and reduce stable feature matches.
+- Low-texture indoor surfaces reduce ORB feature density and can increase VO drift.
+- VO and wheel odometry can arrive with different effective latencies, which can produce EKF lag/overshoot if not time-aligned.
+- Frame-convention mistakes (`camera`, `base_link`, `odom`) can produce systematic pose offsets if transforms are misapplied.
 
 #### 3.2.2 Recovery / Mitigation Logic
 
-<!-- TODO: Explain the logic used to detect, recover from, or reduce failures. -->
-
-**Short explanation placeholder:** Summarize the implemented safeguards, fallback behavior, or operator interventions used during testing.
+- EKF fusion is configured in `robot_localization` with covariance tuning to reduce overconfidence in either odometry source.
+- Fusion uses message `header.stamp` time alignment with buffering/interpolation windows to reduce asynchronous update artifacts.
+- Measurements outside an allowed age window are rejected to avoid fusing stale data.
+- Static TF calibration (`camera` to `base_link`) is verified before runs to ensure consistent frame chaining.
+- During VO tracking loss, operator-level recovery (node restart/reinitialization) is currently used.
 
 #### 3.2.3 Remaining Limitations
 
-<!-- TODO: Document current limitations that remain unresolved at Milestone 2. -->
-
-**Short explanation placeholder:** Identify the known technical gaps that still affect robustness, performance, or completeness.
+- Full quantitative error benchmarking (trajectory RMSE, drift per meter, yaw drift) is not finalized in this milestone.
+- Hardware-level stereo synchronization is not yet finalized; current tests may include residual left-right timing mismatch.
+- The VO pipeline is local (startup-referenced) and does not provide global map consistency.
+- Nav2 closed-loop execution with fused localization is still pending final integration.
 
 ### 3.3 Milestone Video
 
-**Placeholder guidance:** Add one or more embedded or directly linked YouTube/Vimeo videos showing a core sub-task or milestone-relevant technical capability.
-
-- Video 1: [embed/link here]
-- Video 2: [embed/link here]
-
-<!-- TODO: Ensure each video clearly demonstrates a core sub-task required for Milestone 2. -->
+- Video 1: VO + EKF localization demo (RViz + topic outputs) [insert link]
+- Video 2: Active perception loop demo (pose estimation + confidence + NBV) [insert link]
 
 ---
 
