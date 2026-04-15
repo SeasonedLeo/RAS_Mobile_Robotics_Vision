@@ -302,9 +302,30 @@ The EKF maintains a state vector of robot pose $(\mathbf{x}_k, \mathbf{y}_k, \th
 **Node:** `ekf_fusion_node`  
 **Input:** `/odom [nav_msgs/msg/Odometry]` (from differential drive controller), `/vo/odometry [nav_msgs/msg/Odometry]` (from ORB-SLAM 3), `/cmd_vel [geometry_msgs/msg/Twist]` (control input), `/tf` (camera-to-base transform)  
 **Output:** `/fused_odom [nav_msgs/msg/Odometry]`, `/tf` (base_link to odom transform)  
-**Calibration:** Process noise covariance (wheel odometry uncertainty), measurement noise covariance (visual odometry uncertainty per component), and sensor delays or synchronization offsets between the two inputs are tuned during integration testing.
+**Calibration:** Process noise covariance (wheel odometry uncertainty) and measurement noise covariance (visual odometry uncertainty per component) are tuned during integration testing. Time alignment between asynchronous odometry and VO streams is handled using each message `header.stamp`; fixed timestamp offsets, buffering/interpolation windows, and maximum allowed measurement age will alos be  tuned.
 
-**Output format:** The EKF publishes a fused odometry message at 50 Hz containing the best estimate of robot pose, linear velocity, and twist (velocity and angular velocity), along with full covariance matrices for both position and velocity. The transform tree is updated to reflect the corrected base_link position in the odom frame, enabling all downstream planners and controllers to access consistent localization.
+**Output format:** The EKF publishes a fused odometry message at 5 Hz containing the best estimate of robot pose, linear velocity, and twist (velocity and angular velocity), along with full covariance matrices for both position and velocity. The transform tree is updated to reflect the corrected base_link position in the odom frame, enabling all downstream planners and controllers to access consistent localization.
+
+The VO measurement is aligned to the EKF world frame (`odom`) before fusion:
+
+$$
+\begin{aligned}
+\mathbf{T}_{\text{vo}\rightarrow \text{base\_link}}(t)
+&=
+\mathbf{T}_{\text{vo}\rightarrow \text{camera}}(t)\,
+\mathbf{T}_{\text{camera}\rightarrow \text{base\_link}}, \\
+\mathbf{T}_{\text{odom}\rightarrow \text{vo}}
+&=
+\mathbf{T}_{\text{odom}\rightarrow \text{base\_link}}(t_0)\,
+\mathbf{T}_{\text{vo}\rightarrow \text{base\_link}}(t_0)^{-1}, \\
+\mathbf{T}_{\text{odom}\rightarrow \text{base\_link}}^{\text{(VO)}}(t)
+&=
+\mathbf{T}_{\text{odom}\rightarrow \text{vo}}\,
+\mathbf{T}_{\text{vo}\rightarrow \text{base\_link}}(t).
+\end{aligned}
+$$
+
+The EKF update then uses $\mathbf{T}_{o\rightarrow b}^{(\mathrm{VO})}(t)$ (where $o$ is `odom` and $b$ is `base_link`) and wheel odometry in the same `odom` frame.
 
 ### custom interfaces
 
