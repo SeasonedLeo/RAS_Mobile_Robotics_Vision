@@ -532,7 +532,7 @@ This section documents feedback integration and individual contributions.
 | The sentence "The system will be considered successful if the following conditions are met:" should not have a bullet point. | Removed the bullet point | None | resolved |
 | Khaled's name | Removed placeholders | None | in progress |
 
-### 4.2 Individual Contribution
+### 4.2 Individual Contribution checking 
 
 <!-- TODO: Insert direct links to commits, pull requests, and authored files where possible. -->
 
