@@ -282,22 +282,22 @@ In detail, the orchestrator uses a state-machine approach, and defines the follo
 
 ### visual_odometry (ORB-SLAM 3)
 
-The `visual_odometry` node implements ORB-SLAM 3 for real-time camera-based localization and ego-motion estimation. The node subscribes to the RGB-D camera stream from the OAK-D sensor and computes the camera pose and sparse 3D point cloud map incrementally as the robot moves.
+The `visual_odometry` node implements ORB-SLAM 3 for real-time camera-based localization and TurtleBot 4 motion estimation using the Python wrapper `python-orb-slam3==0.1.1`. The node subscribes to stereo monochrome raw images from the OAK-D left and right cameras (`/oakd/left/image_raw` and `/oakd/right/image_raw`) and computes the camera pose and sparse 3D map incrementally as the robot moves.
 
-**How it works:** ORB-SLAM 3 tracks visual features (ORB keypoints) across consecutive frames and estimates camera motion through feature matching and bundle adjustment. The system maintains a local covisibility graph of keyframes and performs loop closure detection to correct accumulated drift. The output is the camera pose (position and orientation) in a locally-consistent coordinate system, published at the camera's frame rate (typically 30 Hz).
+ORB-SLAM 3 tracks visual features (ORB keypoints) across consecutive stereo frames and estimates camera motion through feature matching, stereo triangulation, and bundle adjustment. The output is the camera pose (position and orientation) estimated in the camera frame and then transformed to the robot frame using TF, published at the incoming camera rate (subject to compute and sensor latency).
 
 **Node:** `visual_odometry_node`  
-**Input:** `/oakd/rgb/image_raw [sensor_msgs/msg/Image]`, `/oakd/depth/image_rect_raw [sensor_msgs/msg/Image]`, `/oakd/camera_info [sensor_msgs/msg/CameraInfo]`  
-**Output:** `/vo/pose [geometry_msgs/msg/PoseStamped]`, `/vo/odometry [nav_msgs/msg/Odometry]`, `/vo/point_cloud [sensor_msgs/msg/PointCloud2]`  
-**Calibration:** Camera intrinsic parameters (focal length, principal point, distortion coefficients) and stereo baseline are obtained from the OAK-D camera calibration, which are embedded in the device and read via `/oakd/camera_info`. No additional calibration is required.
+**Input:** `/oakd/left/image_raw [sensor_msgs/msg/Image]`, `/oakd/right/image_raw [sensor_msgs/msg/Image]`, `/oakd/left/camera_info [sensor_msgs/msg/CameraInfo]`, `/oakd/right/camera_info [sensor_msgs/msg/CameraInfo]`  
+**Output:** `/vo/pose [geometry_msgs/msg/PoseStamped]` (current robot pose estimate from local visual odometry, relative to the initial pose at startup)  
+**Calibration:** Left/right camera intrinsics (focal length, principal point, distortion coefficients), stereo extrinsics, and baseline are obtained from the OAK-D calibration and consumed from `/oakd/left/camera_info` and `/oakd/right/camera_info`. No additional manual calibration is performed.
 
-**Output format:** ORB-SLAM 3 publishes odometry as a continuous position and velocity estimate in the camera frame, which is then transformed into the `odom` frame for downstream use. Loop closure corrections are applied retroactively so that past poses remain consistent.
+**Output format:** The node publishes the current robot pose as a local visual-odometry estimate. The trajectory is relative to the initial startup pose, so accumulated drift and local frame consistency should be expected.
 
 ### ekf_fusion (Extended Kalman Filter)
 
 The `ekf_fusion` node fuses visual odometry from ORB-SLAM 3 with wheel odometry from the differential drive controller into a single, robust pose estimate. The fusion is performed using a discrete-time Extended Kalman Filter that combines the two independent motion sources while exploiting their complementary properties: wheel odometry is locally accurate but subject to drift over long distances, while visual odometry is drift-free but can be noisy and may briefly fail.
 
-**How it works:** The EKF maintains a state vector of robot pose $(\mathbf{x}_k, \mathbf{y}_k, \theta_k)$ and velocity $(\dot{\mathbf{x}}_k, \dot{\mathbf{y}}_k)$. The predict step uses the kinematic model with wheel odometry control inputs (linear and angular velocity from `/cmd_vel`), advancing the state estimate. The update step incorporates visual odometry measurements from ORB-SLAM 3, comparing predicted pose against observed pose and correcting both position and velocity estimates using Kalman gain. Both measurements are weighted by their respective uncertainty covariances, allowing the filter to automatically adapt to changing sensor quality.
+The EKF maintains a state vector of robot pose $(\mathbf{x}_k, \mathbf{y}_k, \theta_k)$ and velocity $(\dot{\mathbf{x}}_k, \dot{\mathbf{y}}_k)$. The predict step uses the kinematic model with wheel odometry control inputs (linear and angular velocity from `/cmd_vel`), advancing the state estimate. The update step incorporates visual odometry measurements from ORB-SLAM 3, comparing predicted pose against observed pose and correcting both position and velocity estimates using Kalman gain. Both measurements are weighted by their respective uncertainty covariances, allowing the filter to automatically adapt to changing sensor quality.
 
 **Node:** `ekf_fusion_node`  
 **Input:** `/odom [nav_msgs/msg/Odometry]` (from differential drive controller), `/vo/odometry [nav_msgs/msg/Odometry]` (from ORB-SLAM 3), `/cmd_vel [geometry_msgs/msg/Twist]` (control input), `/tf` (camera-to-base transform)  
