@@ -41,7 +41,7 @@ $$
 \mathbf{x} = \begin{bmatrix} x \\ y \\ \theta \end{bmatrix}
 $$
 
-where \(x, y\) is the robot's position in the global frame and \(\theta\) is its orientation (yaw angle). The continuous-time differential drive kinematics are:
+where (x, y) is the robot's position in the global frame and θ is its orientation (yaw angle). The continuous-time differential drive kinematics are:
 
 $$
 \begin{aligned}
@@ -64,7 +64,7 @@ $$
 \mathbf{u} = [v,\ \omega]^\top
 $$
 
-where \(v\) is the commanded linear velocity (m/s) and \(\omega\) is the commanded angular velocity (rad/s).
+where `v` is the commanded linear velocity (m/s) and `ω` is the commanded angular velocity (rad/s).
 
 The implementation uses linear and angular velocity commands via the ROS 2 geometry_msgs/Twist interface streamed to the differential drive controller.
 
@@ -75,7 +75,7 @@ The implementation uses linear and angular velocity commands via the ROS 2 geome
 
 <!-- **Placeholder guidance:** Show how the selected control inputs propagate the robot state over one time step. -->
 
-The discrete-time state updates using first-order Euler integration with time step \(\Delta t\) are:
+The discrete-time state updates using first-order Euler integration with time step Δt are:
 
 $$
 \begin{aligned}
@@ -85,7 +85,7 @@ y_{k+1} &= y_k + v_k \sin(\theta_k) \Delta t \\
 \end{aligned}
 $$
 
-The discrete updates are derived from Euler integration of the continuous kinematics model. The time step \(\Delta t\) corresponds to the control execution rate of the differential drive controller and the EKF fusion update.
+The discrete updates are derived from Euler integration of the continuous kinematics model. The time step Δt corresponds to the control execution rate of the differential drive controller and the EKF fusion update.
 
 ---
 
@@ -173,7 +173,7 @@ flowchart LR
 
 **Explanation:** Figure 2.1 provides a runtime view of the ROS 2 system, complementing the conceptual architecture shown in the Mermaid diagram. The figure highlights the distinction between streaming perception topics and service-based decision modules.
 
-The perception nodes detect the target object (box or cylinder) using point cloud processing techniques introduced in class. The object pose \((x, y, \text{yaw})\) is estimated using PCA and then transformed into the `odom` frame by the pose estimator node. These pose estimates are continuously streamed and consumed by the orchestrator node.
+The perception nodes detect the target object (box or cylinder) using point cloud processing techniques introduced in class. The object pose `(x, y, yaw)` is estimated using PCA and then transformed into the `odom` frame by the pose estimator node. These pose estimates are continuously streamed and consumed by the orchestrator node.
 
 The orchestrator aggregates a short history of pose estimates and calls the `confidence_evaluator` service to compute a confidence score and determine whether an additional viewpoint is required. If the confidence exceeds the desired threshold, the process terminates. Otherwise, the orchestrator calls the `nbv_planner` service, which computes the next best view in the `odom` frame.
 
@@ -233,7 +233,7 @@ The `confidence_evaluator` node is implemented as a service rather than a stream
 
 ### nbv_planner
 
-The `nbv_planner` selects the next-best-view using a **discrete candidate evaluation strategy**. Given the current target pose and robot pose in the planning frame, it samples \(N\) candidate viewpoints uniformly on a circle around the object:
+The `nbv_planner` selects the next-best-view using a **discrete candidate evaluation strategy**. Given the current target pose and robot pose in the planning frame, it samples `N` candidate viewpoints uniformly on a circle around the object:
 
 $$
 \begin{aligned}
@@ -378,7 +378,7 @@ In simple terms, this YAML tells ORB-SLAM three things: camera geometry, stereo 
 
 The EKF fusion stage uses the ROS 2 `robot_localization` package (`ekf_node`) to fuse visual odometry from ORB-SLAM 3 with wheel odometry from the differential drive controller into a single, robust pose estimate. The fusion is performed using a discrete-time Extended Kalman Filter that combines the two independent motion sources while exploiting their complementary properties: wheel odometry is locally accurate but subject to drift over long distances, while visual odometry is drift-free but can be noisy and may briefly fail.
 
-The EKF maintains a state vector of robot pose \((\mathbf{x}_k, \mathbf{y}_k, \theta_k)\) and velocity \((\dot{\mathbf{x}}_k, \dot{\mathbf{y}}_k)\). The predict step uses the kinematic model with wheel odometry control inputs (linear and angular velocity from `/cmd_vel`), advancing the state estimate. The update step incorporates visual odometry measurements from ORB-SLAM 3, comparing predicted pose against observed pose and correcting both position and velocity estimates using Kalman gain. Both measurements are weighted by their respective uncertainty covariances, allowing the filter to automatically adapt to changing sensor quality.
+The EKF maintains a state vector of robot pose `(x_k, y_k, θ_k)` and velocity `(x_dot_k, y_dot_k)`. The predict step uses the kinematic model with wheel odometry control inputs (linear and angular velocity from `/cmd_vel`), advancing the state estimate. The update step incorporates visual odometry measurements from ORB-SLAM 3, comparing predicted pose against observed pose and correcting both position and velocity estimates using Kalman gain. Both measurements are weighted by their respective uncertainty covariances, allowing the filter to automatically adapt to changing sensor quality.
 
 <!-- **Node:** `ekf_node` (from `robot_localization`)  
 **Input:** `/odom [nav_msgs/msg/Odometry]` (from differential drive controller), `/vo/odometry [nav_msgs/msg/Odometry]` (from ORB-SLAM 3), `/cmd_vel [geometry_msgs/msg/Twist]` (control input), `/tf` (camera-to-base transform)  
@@ -398,7 +398,7 @@ Key fields in the EKF YAML are:
 
 So the ORB YAML controls how VO is produced, and the EKF YAML controls how VO and wheel odometry are fused.
 
-The VO measurement is aligned to the EKF world frame (`odom`) before fusion. Let \(o=\text{odom}\), \(v=\text{vo}\), \(c=\text{camera}\), and \(b=\text{base\_link}\).
+The VO measurement is aligned to the EKF world frame (`odom`) before fusion. Let `o=odom`, `v=vo`, `c=camera`, and `b=base_link`.
 
 $$
 \mathbf{T}_{v\rightarrow b}(t)=\mathbf{T}_{v\rightarrow c}(t)\,\mathbf{T}_{c\rightarrow b}
@@ -412,7 +412,7 @@ $$
 \mathbf{T}_{o\rightarrow b}^{(\mathrm{VO})}(t)=\mathbf{T}_{o\rightarrow v}\,\mathbf{T}_{v\rightarrow b}(t)
 $$
 
-The EKF update then uses \(\mathbf{T}_{o\rightarrow b}^{(\mathrm{VO})}(t)\) and wheel odometry in the same `odom` frame.
+The EKF update then uses `T_{o->b}^{(VO)}(t)` and wheel odometry in the same `odom` frame.
 
 ### custom interfaces
 
