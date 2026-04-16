@@ -508,8 +508,10 @@ At the current milestone stage, Nav2 integration is still incomplete, so detaile
 
 ## 3. Experimental Analysis & Validation
 
-This section summarizes current localization behavior, with focus on stereo timing quality and its impact on VO + EKF fusion.
+This section mainly summarizes current localization behavior, with focus on stereo timing quality and its impact on VO + EKF fusion.
 Main finding: left-right camera timing mismatch is currently the dominant localization issue.
+
+Furthermore, because we were unable to reliably generate point clouds from the scene, we could not fully test or tune the node parameters. This limitation will be addressed in the final milestone.
 
 ### 3.1 Noise & Uncertainty Analysis
 
@@ -536,6 +538,7 @@ In many frames, the left and right images are about `33 ms` apart. During robot 
 
 #### 3.2.1 Failure Cases Observed
 
+- Point clouds/RGBD do not get published automatically, and need specific handling of turtlebot4_bringup package, and services.
 - Left-right timestamp offset (~`33 ms`) -> stereo mismatch -> VO jitter.
 - Fast turns/vibration -> motion blur -> fewer stable ORB matches.
 - Low-texture scenes -> weak feature tracking -> higher VO drift.
@@ -544,14 +547,17 @@ In many frames, the left and right images are about `33 ms` apart. During robot 
 
 #### 3.2.2 Recovery / Mitigation Logic
 
+- A dedicated development workspace was created, the turtlebot4 package was cloned, unnecessary services were disabled, the camera YAML and launch files were modified, the package was rebuilt locally, and the required services and nodes were launched.
 - Pair left/right images using `header.stamp`, and track mean/median/p95 pairing error each run.
 - Tighten sync tolerance toward `10-20 ms`, then compare retained pair count vs VO stability.
 - improve data collection ROS bags ( in progress)
+- Record ROS bags on the turtlebot to avoid loosing data over network.
 <!-- - Keep camera calibration fixed while tuning timing first, so timing remains the isolated variable. -->
 <!-- - Use EKF covariance tuning plus stale-measurement rejection to limit fusion instability. -->
 
 #### 3.2.3 Remaining Limitations
 
+- PointCloud generation has been the main challenge, and will be resolved in the final milestone.
 - Hardware-level stereo synchronization is not finalized.
 - Current bags are sufficient for analysis, but not yet for stable continuous VO in all runs.
 - Final quantitative metrics (RMSE, drift per meter, yaw drift) are still pending.
@@ -560,7 +566,7 @@ In many frames, the left and right images are about `33 ms` apart. During robot 
 ### 3.3 Milestone Video
 
 - Video 1: VO + EKF localization demo (RViz + topic outputs) [insert link]
-- Video 2: Active perception loop demo (pose estimation + confidence + NBV) [insert link]
+
 
 ---
 
