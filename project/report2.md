@@ -198,7 +198,7 @@ This section provides a detailed explanation on Modules and their logic.
 | Planning | `nbv_planner` | **Input:** `/active_perception/plan_nbv [active_perception_interfaces/srv/PlanNBV]`, `/tf`  **Output:** next best view in `odom`, `/active_perception/nbv_markers [visualization_msgs/msg/MarkerArray]` | `planning_frame`, candidate count, radius bounds, utility weights | [`nbv_planner.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/nbv_planner.py) | Implemented |
 | Planning / coordination | `orchestrator` | **Input:** `/active_perception/target_pose [geometry_msgs/msg/PoseStamped]`, `/active_perception/pose_estimate_sample [active_perception_interfaces/msg/PoseEstimateSample]`, `/odom [nav_msgs/msg/Odometry]`  **Output:** service calls to confidence evaluation and NBV planning, planned Nav2 goal handoff | `history_size`, desired confidence threshold, minimum history length, NBV radius and candidate settings | [`orchestrator.py`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/orchestrator.py) | Implemented, Nav2 integration pending |
 | Custom interfaces | `PoseEstimateSample.msg`, `EvaluatePoseConfidence.srv`, `PlanNBV.srv` | Defines the message and service contracts between perception, orchestration, confidence evaluation, and NBV planning | Interface field definitions | [`active_perception_interfaces`](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/active_perception_interfaces) | Implemented |
-| Navigation | `Nav2 stack` | **Input:** planned next-best-view goal in `odom`  **Output:** planned robot motion / action execution | Goal frame, planner settings, controller settings | External ROS 2 package | Pending integration |
+| Navigation | `Nav2 stack`, `nav_goal_sender`, `safety_monitor` | **Input:** planned next-best-view goal in `odom`, `/scan [sensor_msgs/msg/LaserScan]`, `/odom [nav_msgs/msg/Odometry]`, optional bumper/cliff status  **Output:** `NavigateToPose` action goal, navigation status, safe stop / cancel behavior | Goal frame, planner settings, controller settings, timeout threshold, minimum stopping distance, sensor freshness bounds | External ROS 2 package + planned custom ROS 2 nodes | Partially implemented, integration in progress |
 
 
 
@@ -280,6 +280,42 @@ Therefore, the planner does not solve a continuous optimization problem; it samp
 The `orchestrator` is the coordination layer for the active perception loop. It subscribes to the streaming pose outputs from the pose estimator and stores a bounded history of recent pose samples. with at least one sample, it calls the `confidence_evaluator` service. If confidence is sufficiently high, the loop terminates. Otherwise, it calls the `nbv_planner` service to request a new goal in `odom`.
 
 In detail, the orchestrator uses a state-machine approach, and defines the following states: IDLE, WAITING_FOR_POSE, EVALUATING, PLANNING_NBV, READY_TO_NAVIGATE, DONE. Each new sample is appended to this history and, provided the system is not already evaluating or planning, triggers a confidence-evaluation service request. The request contains the full current history window along with the desired confidence threshold and minimum history length. If the returned confidence response indicates that estimation is sufficiently reliable, the orchestrator transitions to a terminal DONE state. Otherwise, it constructs and sends a next-best-view planning request using the latest target pose and robot pose. The NBV response is then stored as the next candidate navigation goal, and the orchestrator transitions to a READY_TO_NAVIGATE state. In the current implementation, the actual Nav2 call is marked as a TODO, so the orchestration logic ends at NBV selection rather than full closed-loop execution.
+
+### navigation subsystem
+
+The navigation contribution in this project is the subsystem that converts a selected next-best-view into safe physical robot motion on the TurtleBot4. Rather than implementing a custom planner from scratch, the design uses the ROS 2 Nav2 stack for global planning, local obstacle avoidance, and trajectory execution, while the custom navigation logic acts as the bridge between perception uncertainty and autonomous motion.
+
+At the system level, this navigation role has four responsibilities: receive or compute the next viewpoint, convert it into a valid robot goal pose, dispatch that goal through the `nav2_msgs/action/NavigateToPose` interface, and monitor execution until success, failure, or interruption is reported back to the orchestrator. In this sense, navigation is not teleoperation or low-level wheel control; it is the viewpoint-to-viewpoint autonomy layer of the active perception loop.
+
+For the TurtleBot4, the navigation model follows planar differential-drive motion, so the same state and control definitions introduced in Section 1 apply directly to viewpoint execution:
+
+$$
+\mathbf{x} = \begin{bmatrix} x \\ y \\ \theta \end{bmatrix},
+\qquad
+\mathbf{u} = \begin{bmatrix} v \\ \omega \end{bmatrix}.
+$$
+
+The role of navigation is therefore to take a desired viewpoint pose in `odom` or `map`, plan a collision-free route through Nav2, and drive the robot until the final pose lies within an acceptable observation tolerance for the perception subsystem.
+
+The proposed custom nodes for this subsystem are `nav_goal_sender` and `safety_monitor`. The `nav_goal_sender` packages the output of the orchestrator or NBV planner as a `NavigateToPose` action goal and tracks progress feedback from Nav2. The `safety_monitor` supervises stale `/scan` or `/odom` data, execution timeout, and emergency stop conditions, and can cancel the current navigation goal or force a safe stop if the platform state becomes unsafe.
+
+Operationally, the navigation workflow is:
+
+1. Perception estimates the object pose.
+2. Confidence evaluation decides whether another observation is needed.
+3. If needed, the NBV planner selects a new viewpoint around the object.
+4. The orchestrator forwards that viewpoint to the navigation layer.
+5. The navigation layer sends the goal to Nav2 using `NavigateToPose`.
+6. Nav2 plans and executes a collision-free trajectory while reacting to obstacles.
+7. Once the robot reaches the viewpoint, the active perception loop resumes observation.
+
+This contribution defines navigation as the execution bridge in the loop
+
+$$
+\text{observe} \rightarrow \text{evaluate} \rightarrow \text{choose viewpoint} \rightarrow \text{navigate} \rightarrow \text{observe again}.
+$$
+
+From a safety standpoint, the navigation design includes deadman timeout behavior, safe-stop handling for stale localization or LiDAR data, and cancellation of active goals when localization confidence drops or a minimum stopping distance is violated. This is especially important because the quality of object localization depends not only on perception accuracy, but also on whether the robot can reach stable and valid viewpoints without unsafe motion.
 
 ### visual_odometry (ORB-SLAM 3)
 
@@ -453,11 +489,20 @@ Custom ROS2 interfaces are used to encapsulate system-specific data and decision
 
 ### 2.2.3 Library Node Configuration
 
-The primary library-based component in this system is the Nav2 stack, which will be used to execute navigation toward the next-best-view goals generated by the planning module. At the current stage, Nav2 is not yet fully integrated into the active perception loop, and therefore no parameter tuning has been finalized.
+The primary library-based component in this system is the Nav2 stack, which is the core of the navigation contribution for active perception on the TurtleBot4. Nav2 is responsible for global path planning, local obstacle avoidance, behavior-tree-based execution, and trajectory tracking once a next-best-view goal has been selected by the planning layer.
 
-In the final system, Nav2 will receive goal poses in the `odom` frame from the orchestrator and will be responsible for global path planning, local obstacle avoidance, and velocity command generation. Its configuration will include standard parameters such as costmap settings, planner and controller plugins, inflation radius, and update frequencies.
+The custom navigation contribution does not replace Nav2. Instead, it defines how active-perception outputs are converted into actionable robot goals. In the intended final architecture, the orchestrator or `nav_goal_sender` will send a `geometry_msgs/msg/PoseStamped` goal through the `nav2_msgs/action/NavigateToPose` action server. Nav2 will then compute a feasible path, react to local obstacles through its controller and costmaps, and report execution status back to the active perception loop.
 
-Since the current milestone focuses on perception and decision-making, Nav2 is treated as a downstream module, and its detailed configuration will be completed and validated in the next milestone once full system integration is achieved.
+The planned navigation interfaces are:
+
+- Subscription to `/active_perception/target_pose [geometry_msgs/msg/PoseStamped]` and robot state from `/odom [nav_msgs/msg/Odometry]`
+- Optional subscription to `/active_perception/confidence [std_msgs/msg/Float32]` for stop / continue decisions
+- Use of `/navigate_to_pose [nav2_msgs/action/NavigateToPose]` as the main goal execution interface
+- Monitoring of `/scan [sensor_msgs/msg/LaserScan]`, `/tf`, and `/tf_static` for safe autonomous operation
+
+The intended navigation objectives are to move the robot to a selected next-best-viewpoint, avoid collisions, stop within observation tolerance, support repeated replanning, and reject unsafe execution when sensors or localization become unreliable. These objectives match the active perception mission, where motion is used as a tool to improve localization quality rather than as a standalone navigation benchmark.
+
+At the current milestone stage, Nav2 integration is still incomplete, so detailed parameter tuning has not yet been finalized. The remaining integration work includes validating frame consistency, dispatching goals to `NavigateToPose`, confirming arrival tolerances for viewpoint stability, and adding safety-monitor logic for timeout, obstacle violation, and localization failure handling.
 
 ---
 
@@ -539,8 +584,8 @@ This section documents feedback integration and individual contributions.
 
 | Team Member | Primary Technical Role | Key Git Commits / PRs | Specific File(s) Authorship | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `Mohammad Nasr` | `Perception_Module` | `[970c915,b180cfd, 4a9a162, 03b2bf6 (For report)]` | `cylinder finder, box_finder, pose_estimator,orchestrator,nbv_planner,confidence_evaluator` | `all nodes need to be tested on real data/robot` |
-| `Vikas Narang` | `Localization_Module (VO + EKF)` | `[1 parent 3b519bc commit 61fc196 (For report)]` | `orb_vo_node.py, orb_vo.yaml, ekf.yaml` | `all nodes need to be tested on real data/robot` ||
+| `Mohammad Nasr` | `Perception_Module` | `[970c915,b180cfd, 4a9a162, 03b2bf6 (For report)]` | `cylinder finder, box_finder, pose_estimator, orchestrator, nbv_planner, confidence_evaluator` | `all nodes need to be tested on real data/robot` |
+| `Vikas Narang` | `Localization_Module (VO + EKF)` | `[1 parent 3b519bc commit 61fc196 (For report)]` | `orb_vo_node.py, orb_vo.yaml, ekf.yaml` | `all nodes need to be tested on real data/robot` |
+| `Khaled` | `Navigation_Module` | `[report contribution pending commit reference]` | `navigation subsystem design, Nav2 integration plan, action/service interface definition, safety and execution workflow documentation` | `Nav2 goal-dispatch and safety-monitor integration are the next implementation steps` |
 
 ---
-
