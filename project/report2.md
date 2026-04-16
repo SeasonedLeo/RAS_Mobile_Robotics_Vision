@@ -283,9 +283,9 @@ In detail, the orchestrator uses a state-machine approach, and defines the follo
 
 ### navigation subsystem
 
-The navigation contribution in this project is the subsystem that converts a selected next-best-view into safe physical robot motion on the TurtleBot4. Rather than implementing a custom planner from scratch, the design uses the ROS 2 Nav2 stack for global planning, local obstacle avoidance, and trajectory execution, while the custom navigation logic acts as the bridge between perception uncertainty and autonomous motion.
+The navigation in this project is the subsystem that converts a selected next-best-view into safe physical robot motion on the TurtleBot4. Rather than implementing a custom planner from scratch, the design uses the ROS 2 Nav2 stack for global planning, local obstacle avoidance, and trajectory execution, while the custom navigation logic acts as the bridge between perception uncertainty and autonomous motion.
 
-At the system level, this navigation role has four responsibilities: receive or compute the next viewpoint, convert it into a valid robot goal pose, dispatch that goal through the `nav2_msgs/action/NavigateToPose` interface, and monitor execution until success, failure, or interruption is reported back to the orchestrator. In this sense, navigation is not teleoperation or low-level wheel control; it is the viewpoint-to-viewpoint autonomy layer of the active perception loop.
+At the system level, this navigation role has four responsibilities: receive the next viewpoint as goal, convert it into a valid robot goal pose, dispatch that goal through the `nav2_msgs/action/NavigateToPose` interface, and monitor execution until success, failure, or interruption is reported back to the orchestrator. In this sense, navigation is not teleoperation or low-level wheel control; it is the viewpoint-to-viewpoint autonomy layer of the active perception loop.
 
 For the TurtleBot4, the navigation model follows planar differential-drive motion, so the same state and control definitions introduced in Section 1 apply directly to viewpoint execution:
 
@@ -576,7 +576,7 @@ This section documents feedback integration and individual contributions.
 | :--- | :--- | :--- | :--- |
 | Change "Just the Docs Template" Webpage Title. | Updated the `_config.yaml` file | None | resolved |
 | The sentence "The system will be considered successful if the following conditions are met:" should not have a bullet point. | Removed the bullet point | None | resolved |
-| Khaled's name | Removed placeholders | None | in progress |
+| Khaled's name | Removed placeholders | None | resolved |
 
 ### 4.2 Individual Contribution checking 
 

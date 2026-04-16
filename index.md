@@ -41,7 +41,7 @@ This perception–action loop repeats until the pose estimate reaches a desired 
 - 📫 How to reach me: **vikasnar@gmail.com, vnarang2@asu.edu**
 
 ### khaled Elsahly
-![Name](assets/images/name.jpg)
+
 
 - Role: Integration
 - Affiliation: Arizona State University
