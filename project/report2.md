@@ -162,11 +162,7 @@ flowchart LR
 
 ### 2.1.2 rqt_graph Export
 
-<div align="center">
-  <img src="{{ '/assets/images/Fig1.png' | relative_url }}" 
-       alt="Annotated ROS2 Computational Graph" 
-       width="90%">
-</div>
+
 
 **Figure 2.1.** Annotated ROS 2 computational graph for the active perception pipeline. Solid black arrows denote implemented topic connections labeled as `/topic_name [msg_type]`. Dashed red arrows denote implemented service calls labeled as `/name [srv_type]`, while dashed blue arrows denote planned Nav2 action integration labeled as `/name [action_type]`. The graph illustrates the flow from perception through pose estimation and orchestration to next-best-view planning and navigation.
 
