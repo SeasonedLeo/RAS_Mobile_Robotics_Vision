@@ -534,6 +534,29 @@ In many frames, the left and right images are about `33 ms` apart. During robot 
 
 <!-- Camera-to-robot extrinsics are handled through TF (`camera` to `base_link`). VO starts in a local frame, then is mapped to `odom` at startup so EKF fusion runs in one frame. EKF (`robot_localization`) tuning uses process/measurement covariance, `header.stamp` alignment, buffering/interpolation, and stale-measurement rejection. -->
 
+#### 3.1.2 VO Path Comparison (Unscaled vs Scaled)
+
+The **unscaled VO path** is the original trajectory directly produced by ORB-SLAM3.  
+The **scaled VO path** is obtained by applying a scale factor computed from the ratio between the odometry path length and the unscaled VO path length over the same segment.
+
+<div align="center">
+  <img src="{{ '/assets/images/uns.png' | relative_url }}"
+       alt="Unscaled visual odometry path"
+       width="80%">
+</div>
+
+**Figure 3.1.2a.** Unscaled VO trajectory (raw ORB-SLAM3 output).
+
+<div align="center">
+  <img src="{{ '/assets/images/sc.png' | relative_url }}"
+       alt="Scaled visual odometry path"
+       width="80%">
+</div>
+
+**Figure 3.1.2b.** Scaled VO trajectory using odometry-based scale correction.
+
+These plots also highlight the main issue in our current pipeline: left-right camera synchronization. Because stereo frames are often not aligned in time, ORB-SLAM3 cannot reliably form matching pairs and tracking quality drops. We tested two pairing methods: (1) frame-to-frame pairing and (2) pairing by `header.stamp` timestamp. Both methods still show degradation when the left-right time offset becomes large.
+
 ### 3.2 Run-Time Issues
 
 #### 3.2.1 Failure Cases Observed
