@@ -586,6 +586,6 @@ This section documents feedback integration and individual contributions.
 | :--- | :--- | :--- | :--- | :--- |
 | `Mohammad Nasr` | `Perception_Module` | `[970c915,b180cfd, 4a9a162, 03b2bf6 (For report)]` | `cylinder finder, box_finder, pose_estimator, orchestrator, nbv_planner, confidence_evaluator` | `all nodes need to be tested on real data/robot` |
 | `Vikas Narang` | `Localization_Module (VO + EKF)` | `[1 parent 3b519bc commit 61fc196 (For report)]` | `orb_vo_node.py, orb_vo.yaml, ekf.yaml` | `all nodes need to be tested on real data/robot` |
-| `Khaled` | `Navigation_Module` | `[report contribution pending commit reference]` | `navigation subsystem design, Nav2 integration plan, action/service interface definition, safety and execution workflow documentation` | `Nav2 goal-dispatch and safety-monitor integration are the next implementation steps` |
+| `Khaled` | `Navigation_Module` | `[e5e9469]` | `navigation subsystem design, Nav2 integration plan, action/service interface definition, safety and execution workflow documentation` | `Nav2 goal-dispatch and safety-monitor integration are the next implementation steps` |
 
 ---
