@@ -219,7 +219,7 @@ Within the complete system, this node acts as a front-end detector for one objec
 
 ### box_finder
 
-The `box_finder` node plays the same architectural role as the cylinder_finder, but is specialized for box-shaped objects. It processes the incoming point cloud through spatial filtering, floor segmentation, and Euclidean clustering to isolate candidate object clusters. For each cluster, it then applies a PCA-based oriented bounding box fitting method: the cluster covariance is analyzed to extract principal axes, one axis is constrained to align with the expected vertical direction, and the cluster is projected into this local frame to estimate box center, orientation, and dimensions. Simple geometric checks on size and aspect ratios are then used to reject implausible candidates. The selected target cluster is published to the shared topic /`active_perception/target_cloud`.
+The `box_finder` node plays the same architectural role as the cylinder_finder, but is specialized for box-shaped objects. It processes the incoming point cloud through spatial filtering, floor segmentation, and Euclidean clustering to isolate candidate object clusters. For each cluster, it then applies a PCA-based oriented bounding box fitting method: the cluster covariance is analyzed to extract principal axes, one axis is constrained to align with the expected vertical direction, and the cluster is projected into this local frame to estimate box center, orientation, and dimensions. Simple geometric checks on size and aspect ratios are then used to reject implausible candidates. The selected target cluster is published to the shared topic `/active_perception/target_cloud`.
 
 ### pose_estimator
 
@@ -229,7 +229,7 @@ The node publishes both `/active_perception/target_pose` and `/active_perception
 
 ### confidence_evaluator
 
-The `confidence_evaluator` node is implemented as a service rather than a streaming subscriber. This is a deliberate design choice: confidence should be evaluated only after the orchestrator has accumulated a short history of recent pose estimates.The `confidence_evaluator` node assesses whether the current object pose estimate is reliable enough to terminate the active perception loop. Rather than evaluating a single estimate, it scores a recent history of PoseEstimateSample observations using weighted measures of positional stability, yaw stability, average point count, anisotropy of the observed cloud, and the fraction of estimates whose yaw was derived from PCA rather than fallback centroid bearing. The resulting confidence score is compared against a user-defined threshold and minimum history length to determine whether the system should stop or continue planning a next-best view.
+The `confidence_evaluator` node is implemented as a service rather than a streaming subscriber. This is a deliberate design choice: confidence should be evaluated only after the orchestrator has accumulated a short history of recent pose estimates. The `confidence_evaluator` node assesses whether the current object pose estimate is reliable enough to terminate the active perception loop. Rather than evaluating a single estimate, it scores a recent history of PoseEstimateSample observations using weighted measures of positional stability, yaw stability, average point count, anisotropy of the observed cloud, and the fraction of estimates whose yaw was derived from PCA rather than fallback centroid bearing. The resulting confidence score is compared against a user-defined threshold and minimum history length to determine whether the system should stop or continue planning a next-best view.
 
 ### nbv_planner
 
@@ -277,7 +277,7 @@ Therefore, the planner does not solve a continuous optimization problem; it samp
 
 ### orchestrator
 
-The `orchestrator` is the coordination layer for the active perception loop. It subscribes to the streaming pose outputs from the pose estimator and stores a bounded history of recent pose samples. with at least one sample, it calls the `confidence_evaluator` service. If confidence is sufficiently high, the loop terminates. Otherwise, it calls the `nbv_planner` service to request a new goal in `odom`.
+The `orchestrator` is the coordination layer for the active perception loop. It subscribes to the streaming pose outputs from the pose estimator and stores a bounded history of recent pose samples. With at least one sample, it calls the `confidence_evaluator` service. If confidence is sufficiently high, the loop terminates. Otherwise, it calls the `nbv_planner` service to request a new goal in `odom`.
 
 In detail, the orchestrator uses a state-machine approach, and defines the following states: IDLE, WAITING_FOR_POSE, EVALUATING, PLANNING_NBV, READY_TO_NAVIGATE, DONE. Each new sample is appended to this history and, provided the system is not already evaluating or planning, triggers a confidence-evaluation service request. The request contains the full current history window along with the desired confidence threshold and minimum history length. If the returned confidence response indicates that estimation is sufficiently reliable, the orchestrator transitions to a terminal DONE state. Otherwise, it constructs and sends a next-best-view planning request using the latest target pose and robot pose. The NBV response is then stored as the next candidate navigation goal, and the orchestrator transitions to a READY_TO_NAVIGATE state. In the current implementation, the actual Nav2 call is marked as a TODO, so the orchestration logic ends at NBV selection rather than full closed-loop execution.
 
@@ -383,7 +383,7 @@ The EKF maintains a state vector of robot pose $(\mathbf{x}_k, \mathbf{y}_k, \th
 <!-- **Node:** `ekf_node` (from `robot_localization`)  
 **Input:** `/odom [nav_msgs/msg/Odometry]` (from differential drive controller), `/vo/odometry [nav_msgs/msg/Odometry]` (from ORB-SLAM 3), `/cmd_vel [geometry_msgs/msg/Twist]` (control input), `/tf` (camera-to-base transform)  
 **Output:** `/fused_odom [nav_msgs/msg/Odometry]`, `/tf` (base_link to odom transform)  
-**Calibration:** Process noise covariance (wheel odometry uncertainty) and measurement noise covariance (visual odometry uncertainty per component) are tuned during integration testing. Time alignment between asynchronous odometry and VO streams is handled using each message `header.stamp`; fixed timestamp offsets, buffering/interpolation windows, and maximum allowed measurement age will alos be  tuned. -->
+**Calibration:** Process noise covariance (wheel odometry uncertainty) and measurement noise covariance (visual odometry uncertainty per component) are tuned during integration testing. Time alignment between asynchronous odometry and VO streams is handled using each message `header.stamp`; fixed timestamp offsets, buffering/interpolation windows, and maximum allowed measurement age will also be tuned. -->
 
 The EKF publishes a fused odometry message at 5 Hz containing the best estimate of robot pose, linear velocity, and twist (velocity and angular velocity), along with full covariance matrices for both position and velocity. The transform tree is updated to reflect the corrected base_link position in the odom frame, enabling all downstream planners and controllers to access consistent localization.
 
@@ -550,8 +550,8 @@ In many frames, the left and right images are about `33 ms` apart. During robot 
 - A dedicated development workspace was created, the turtlebot4 package was cloned, unnecessary services were disabled, the camera YAML and launch files were modified, the package was rebuilt locally, and the required services and nodes were launched.
 - Pair left/right images using `header.stamp`, and track mean/median/p95 pairing error each run.
 - Tighten sync tolerance toward `10-20 ms`, then compare retained pair count vs VO stability.
-- improve data collection ROS bags ( in progress)
-- Record ROS bags on the turtlebot to avoid loosing data over network.
+- Improve data collection ROS bags (in progress)
+- Record ROS bags on the turtlebot to avoid losing data over network.
 <!-- - Keep camera calibration fixed while tuning timing first, so timing remains the isolated variable. -->
 <!-- - Use EKF covariance tuning plus stale-measurement rejection to limit fusion instability. -->
 
