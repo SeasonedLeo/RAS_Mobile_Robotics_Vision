@@ -61,7 +61,7 @@ The state variables represent the robot's 2D pose in the planning frame. The mod
 Specify the control inputs used by the robot and how they correspond to commanded motion.
 
 $$
-\mathbf{u} = \begin{bmatrix} v \\ \omega \end{bmatrix}
+\mathbf{u} = [v,\ \omega]^\top
 $$
 
 where $v$ is the commanded linear velocity (m/s) and $\omega$ is the commanded angular velocity (rad/s).
@@ -173,7 +173,7 @@ flowchart LR
 
 **Explanation:** Figure 2.1 provides a runtime view of the ROS 2 system, complementing the conceptual architecture shown in the Mermaid diagram. The figure highlights the distinction between streaming perception topics and service-based decision modules.
 
-The perception nodes detect the target object (box or cylinder) using point cloud processing techniques introduced in class. The object pose \((x, y, \text{yaw})\) is estimated using PCA and then transformed into the `odom` frame by the pose estimator node. These pose estimates are continuously streamed and consumed by the orchestrator node.
+The perception nodes detect the target object (box or cylinder) using point cloud processing techniques introduced in class. The object pose $(x, y, \text{yaw})$ is estimated using PCA and then transformed into the `odom` frame by the pose estimator node. These pose estimates are continuously streamed and consumed by the orchestrator node.
 
 The orchestrator aggregates a short history of pose estimates and calls the `confidence_evaluator` service to compute a confidence score and determine whether an additional viewpoint is required. If the confidence exceeds the desired threshold, the process terminates. Otherwise, the orchestrator calls the `nbv_planner` service, which computes the next best view in the `odom` frame.
 
@@ -233,7 +233,7 @@ The `confidence_evaluator` node is implemented as a service rather than a stream
 
 ### nbv_planner
 
-The `nbv_planner` selects the next-best-view using a **discrete candidate evaluation strategy**. Given the current target pose and robot pose in the planning frame, it samples \(N\) candidate viewpoints uniformly on a circle around the object:
+The `nbv_planner` selects the next-best-view using a **discrete candidate evaluation strategy**. Given the current target pose and robot pose in the planning frame, it samples $N$ candidate viewpoints uniformly on a circle around the object:
 
 $$
 \begin{aligned}
@@ -398,26 +398,21 @@ Key fields in the EKF YAML are:
 
 So the ORB YAML controls how VO is produced, and the EKF YAML controls how VO and wheel odometry are fused.
 
-The VO measurement is aligned to the EKF world frame (`odom`) before fusion:
+The VO measurement is aligned to the EKF world frame (`odom`) before fusion. Let $o=\text{odom}$, $v=\text{vo}$, $c=\text{camera}$, and $b=\text{base\_link}$.
 
 $$
-\begin{aligned}
-\mathbf{T}_{\text{vo}\rightarrow \text{base\_link}}(t)
-&=
-\mathbf{T}_{\text{vo}\rightarrow \text{camera}}(t)\,
-\mathbf{T}_{\text{camera}\rightarrow \text{base\_link}}, \\
-\mathbf{T}_{\text{odom}\rightarrow \text{vo}}
-&=
-\mathbf{T}_{\text{odom}\rightarrow \text{base\_link}}(t_0)\,
-\mathbf{T}_{\text{vo}\rightarrow \text{base\_link}}(t_0)^{-1}, \\
-\mathbf{T}_{\text{odom}\rightarrow \text{base\_link}}^{\text{(VO)}}(t)
-&=
-\mathbf{T}_{\text{odom}\rightarrow \text{vo}}\,
-\mathbf{T}_{\text{vo}\rightarrow \text{base\_link}}(t).
-\end{aligned}
+\mathbf{T}_{v\rightarrow b}(t)=\mathbf{T}_{v\rightarrow c}(t)\,\mathbf{T}_{c\rightarrow b}
 $$
 
-The EKF update then uses $\mathbf{T}_{o\rightarrow b}^{(\mathrm{VO})}(t)$ (where $o$ is `odom` and $b$ is `base_link`) and wheel odometry in the same `odom` frame.
+$$
+\mathbf{T}_{o\rightarrow v}=\mathbf{T}_{o\rightarrow b}(t_0)\,\mathbf{T}_{v\rightarrow b}(t_0)^{-1}
+$$
+
+$$
+\mathbf{T}_{o\rightarrow b}^{(\mathrm{VO})}(t)=\mathbf{T}_{o\rightarrow v}\,\mathbf{T}_{v\rightarrow b}(t)
+$$
+
+The EKF update then uses $\mathbf{T}_{o\rightarrow b}^{(\mathrm{VO})}(t)$ and wheel odometry in the same `odom` frame.
 
 ### custom interfaces
 
