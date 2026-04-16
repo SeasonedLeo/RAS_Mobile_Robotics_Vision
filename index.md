@@ -40,13 +40,13 @@ This perception–action loop repeats until the pose estimate reaches a desired 
 - 🧠🔧 Research Interests: Robot autonomy, mapping, motion planning , controls , data driven controls, simulation.
 - 📫 How to reach me: **vikasnar@gmail.com, vnarang2@asu.edu**
 
-### Name Lastname
+### khaled Elsahly
 ![Name](assets/images/name.jpg)
 
 - Role: Integration
 - Affiliation: Arizona State University
 - Research Interests: systems integration, ROS2, embedded robotics
-- GitHub: https://github.com/username
+- GitHub: https://github.com/kzeinela
 
 ## Repository Contents
 
