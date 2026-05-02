@@ -140,6 +140,50 @@ Output: stop decision or next-best-view goal
 | `confidence_evaluator` | Computes confidence from a recent estimate history | `TODO` |
 | `nbv_planner` | Selects the next best view candidate | `TODO` |
 | `orchestrator` | Coordinates confidence checks and replanning | `TODO` |
+| `visual_odometry_node` (ORB-SLAM3) | Stereo visual odometry and camera-pose tracking | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/orb_ekf/orb_vo_node.py` |
+| `ekf_node` configuration | VO + wheel odometry fusion settings | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/ekf.yaml` |
+
+### 2.5 Individual Localization Section (Vikas Narang): ORB-SLAM3 + EKF
+
+This section documents the localization module contribution based on ORB-SLAM3 stereo visual odometry integrated with EKF fusion.
+
+#### 2.5.1 Camera Used in ORB-SLAM Pipeline
+
+The ORB-SLAM3 node uses the TurtleBot4 OAK-D stereo camera pair as its primary localization sensor:
+
+- Left camera image topic: `/oakd/left/image_raw`
+- Right camera image topic: `/oakd/right/image_raw`
+- Left camera calibration topic: `/oakd/left/camera_info`
+- Right camera calibration topic: `/oakd/right/camera_info`
+
+Stereo intrinsics and baseline are consumed through calibration/configuration parameters (`fx`, `fy`, `cx`, `cy`, image size, and baseline term such as `Camera.bf`) so that feature correspondences can be triangulated at metric scale.
+
+#### 2.5.2 How ORB-SLAM3 Works in This Project
+
+At each synchronized stereo frame pair, ORB-SLAM3 performs the following processing stages:
+
+1. Extract ORB keypoints and descriptors from left/right images.
+2. Match descriptors to build stereo correspondences and temporal feature tracks.
+3. Estimate camera motion from geometric constraints and tracked features.
+4. Triangulate sparse 3D map points from stereo disparity.
+5. Refine pose/map consistency through internal local optimization.
+6. Publish local visual odometry as ROS 2 pose/odometry outputs for downstream fusion.
+
+The localization output is relative to startup and can drift over long operation. To stabilize deployment for navigation, the VO estimate is fused with wheel odometry in EKF (`robot_localization`), providing a smoother and more robust `odom` estimate for planning/control.
+
+#### 2.5.3 ORB-SLAM3 Features and Parameters Used
+
+The ORB-SLAM3 configuration relies on the standard ORB feature extractor and stereo parameters:
+
+- `ORBextractor.nFeatures`: target number of features extracted per frame.
+- `ORBextractor.scaleFactor`: image pyramid scaling between levels.
+- `ORBextractor.nLevels`: number of pyramid levels for multi-scale matching.
+- `ORBextractor.iniThFAST`: initial FAST threshold for keypoint detection.
+- `ORBextractor.minThFAST`: fallback FAST threshold in low-texture regions.
+- `Camera.fps`: expected image frame rate for timing consistency.
+- `ThDepth`/stereo depth threshold terms: constrain valid stereo depth range.
+
+Practically, these parameters control the accuracy/robustness trade-off: higher feature counts and tuned FAST thresholds improve tracking in texture-limited indoor scenes but increase compute load.
 
 ---
 
@@ -256,6 +300,12 @@ Every custom module discussed in this report must include a direct repository hy
 > Note: Replace each `TODO` entry with a clickable GitHub URL to the exact file and line number used in your implementation.
 {: .note }
 
+### 5.1 Localization Module Links (Vikas Narang)
+
+- `orb_vo_node.py`: `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/orb_ekf/orb_vo_node.py`
+- `orb_vo.yaml`: `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/orb_vo.yaml`
+- `ekf.yaml`: `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/ekf.yaml`
+
 ---
 
 ## 6. Individual Contribution & Audit Appendix
@@ -267,12 +317,17 @@ This appendix should make authorship auditable and match the Milestone 3 require
 | Student Name 1 | `TODO` | `TODO` | `TODO` |
 | Student Name 2 | `TODO` | `TODO` | `TODO` |
 | Student Name 3 | `TODO` | `TODO` | `TODO` |
+| Vikas Narang | `Localization_Module (VO + EKF)` | `1 parent 3b519bc, 61fc196 (report contribution), ORB_EKF commits` | `src/ORB_EKF/orb_ekf/orb_vo_node.py, src/ORB_EKF/config/orb_vo.yaml, src/ORB_EKF/config/ekf.yaml` |
+| Mohammad Nasr | `Perception_Module` | `970c915, b180cfd, 4a9a162, 03b2bf6` | `cylinder_finder.py, box_finder.py, pose_estimator.py, confidence_evaluator.py, nbv_planner.py, orchestrator.py` |
+| Khaled | `Navigation_Module` | `e5e9469` | `navigation subsystem design and Nav2 integration artifacts` |
 
 ### 6.1 Authorship Notes
 
 <!-- TODO: Clarify who authored which custom logic and who handled infrastructure/integration. -->
 
 Add a short note explaining how work was divided and how the commit history supports the claimed authorship.
+
+Localization authorship note (Vikas Narang): implemented and documented the ORB-SLAM3 stereo visual-odometry integration and EKF fusion configuration, including camera-topic interfaces, ORB configuration workflow, VO publication pipeline, and localization handoff to navigation modules.
 
 ### 6.2 Audit Readiness Checklist
 
