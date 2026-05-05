@@ -142,7 +142,7 @@ flowchart LR
   %% Estimation to planning
   OPE --> CONF
   CONF --> NBV
-  EKF --> NBV
+  EKF --> NAV2
 
   %% Planning to actuation
   NBV --> NAV2
