@@ -58,15 +58,80 @@ Provide a concise outcome statement supported by the main result visual or bench
 
 ## 2. Algorithm
 
-This section should document the core technical contribution of the custom module(s) using formal notation, equations, and direct traceability to implementation.
+This section presents the algorithmic design rationale and execution logic of the custom modules and ROS 2 nodes used in the system. Although Report 2 outlined the main components and their core functions, this section examines them in greater detail, with emphasis on internal data flow, decision-making logic, and the way the modules interact to support active perception.
 
-### 2.1 Problem Formulation
+
+
+### 2.1 System Components and Their Interactions
+
+### 2.1.1 Perception Module 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 2.1.2 (Visual Odometry or Estimation & Localization Module) Individual Localization Section (Vikas Narang): ORB-SLAM3 + EKF
+
+This section documents the localization module contribution based on ORB-SLAM3 stereo visual odometry integrated with EKF fusion.
+
+#### Camera Used in ORB-SLAM Pipeline
+
+The ORB-SLAM3 node uses the TurtleBot4 OAK-D stereo camera pair as its primary localization sensor:
+
+- Left camera image topic: `/oakd/left/image_raw`
+- Right camera image topic: `/oakd/right/image_raw`
+- Left camera calibration topic: `/oakd/left/camera_info`
+- Right camera calibration topic: `/oakd/right/camera_info`
+
+Stereo intrinsics and baseline are consumed through calibration/configuration parameters (`fx`, `fy`, `cx`, `cy`, image size, and baseline term such as `Camera.bf`) so that feature correspondences can be triangulated at metric scale.
+
+#### How ORB-SLAM3 Works in This Project
+
+At each synchronized stereo frame pair, ORB-SLAM3 performs the following processing stages:
+
+1. Extract ORB keypoints and descriptors from left/right images.
+2. Match descriptors to build stereo correspondences and temporal feature tracks.
+3. Estimate camera motion from geometric constraints and tracked features.
+4. Triangulate sparse 3D map points from stereo disparity.
+5. Refine pose/map consistency through internal local optimization.
+6. Publish local visual odometry as ROS 2 pose/odometry outputs for downstream fusion.
+
+The localization output is relative to startup and can drift over long operation. To stabilize deployment for navigation, the VO estimate is fused with wheel odometry in EKF (`robot_localization`), providing a smoother and more robust `odom` estimate for planning/control.
+
+#### ORB-SLAM3 Features and Parameters Used
+
+The ORB-SLAM3 configuration relies on the standard ORB feature extractor and stereo parameters:
+
+- `ORBextractor.nFeatures`: target number of features extracted per frame.
+- `ORBextractor.scaleFactor`: image pyramid scaling between levels.
+- `ORBextractor.nLevels`: number of pyramid levels for multi-scale matching.
+- `ORBextractor.iniThFAST`: initial FAST threshold for keypoint detection.
+- `ORBextractor.minThFAST`: fallback FAST threshold in low-texture regions.
+- `Camera.fps`: expected image frame rate for timing consistency.
+- `ThDepth`/stereo depth threshold terms: constrain valid stereo depth range.
+
+Practically, these parameters control the accuracy/robustness trade-off: higher feature counts and tuned FAST thresholds improve tracking in texture-limited indoor scenes but increase compute load.
+
+
+
+
+### 2.1.3 Navigation, Control, Actuation Module
 
 <!-- TODO: Define the robot state, object state, observations, and control/action variables. -->
 
-Describe the inputs, outputs, assumptions, and objective of the algorithm.
 
-### 2.2 Formal Algorithm Description
+
+### 2.2 Orchestrator
 
 <!-- TODO: Replace the example equations below with the project-specific algorithm used in Milestone 3. -->
 
@@ -114,7 +179,7 @@ $$
 
 where \(d\) penalizes travel cost, \(h\) rewards view geometry, and \(r\) captures risk or constraint violations.
 
-### 2.3 Algorithm Pseudocode
+### 2.3 System Logic Suedocode
 
 <!-- TODO: Replace this outline with the exact logic of the custom algorithm. -->
 
@@ -143,47 +208,7 @@ Output: stop decision or next-best-view goal
 | `visual_odometry_node` (ORB-SLAM3) | Stereo visual odometry and camera-pose tracking | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/orb_ekf/orb_vo_node.py` |
 | `ekf_node` configuration | VO + wheel odometry fusion settings | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/ekf.yaml` |
 
-### 2.5 Individual Localization Section (Vikas Narang): ORB-SLAM3 + EKF
 
-This section documents the localization module contribution based on ORB-SLAM3 stereo visual odometry integrated with EKF fusion.
-
-#### 2.5.1 Camera Used in ORB-SLAM Pipeline
-
-The ORB-SLAM3 node uses the TurtleBot4 OAK-D stereo camera pair as its primary localization sensor:
-
-- Left camera image topic: `/oakd/left/image_raw`
-- Right camera image topic: `/oakd/right/image_raw`
-- Left camera calibration topic: `/oakd/left/camera_info`
-- Right camera calibration topic: `/oakd/right/camera_info`
-
-Stereo intrinsics and baseline are consumed through calibration/configuration parameters (`fx`, `fy`, `cx`, `cy`, image size, and baseline term such as `Camera.bf`) so that feature correspondences can be triangulated at metric scale.
-
-#### 2.5.2 How ORB-SLAM3 Works in This Project
-
-At each synchronized stereo frame pair, ORB-SLAM3 performs the following processing stages:
-
-1. Extract ORB keypoints and descriptors from left/right images.
-2. Match descriptors to build stereo correspondences and temporal feature tracks.
-3. Estimate camera motion from geometric constraints and tracked features.
-4. Triangulate sparse 3D map points from stereo disparity.
-5. Refine pose/map consistency through internal local optimization.
-6. Publish local visual odometry as ROS 2 pose/odometry outputs for downstream fusion.
-
-The localization output is relative to startup and can drift over long operation. To stabilize deployment for navigation, the VO estimate is fused with wheel odometry in EKF (`robot_localization`), providing a smoother and more robust `odom` estimate for planning/control.
-
-#### 2.5.3 ORB-SLAM3 Features and Parameters Used
-
-The ORB-SLAM3 configuration relies on the standard ORB feature extractor and stereo parameters:
-
-- `ORBextractor.nFeatures`: target number of features extracted per frame.
-- `ORBextractor.scaleFactor`: image pyramid scaling between levels.
-- `ORBextractor.nLevels`: number of pyramid levels for multi-scale matching.
-- `ORBextractor.iniThFAST`: initial FAST threshold for keypoint detection.
-- `ORBextractor.minThFAST`: fallback FAST threshold in low-texture regions.
-- `Camera.fps`: expected image frame rate for timing consistency.
-- `ThDepth`/stereo depth threshold terms: constrain valid stereo depth range.
-
-Practically, these parameters control the accuracy/robustness trade-off: higher feature counts and tuned FAST thresholds improve tracking in texture-limited indoor scenes but increase compute load.
 
 ---
 
