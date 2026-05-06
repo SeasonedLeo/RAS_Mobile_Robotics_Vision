@@ -10,8 +10,6 @@ nav_order: 3
 
 {: .no_toc }
 
-This report is structured to match the Milestone 3 requirements for the final scientific dossier. It focuses on validation, benchmarking, ethical analysis, and auditable attribution of each custom technical contribution.
-
 ---
 
 ## Table of Contents
@@ -274,21 +272,72 @@ $$
 
 When radius randomization is enabled, each candidate radius is sampled in the interval \([r_{\min}, r_{\max}]\); otherwise a fixed or adaptive base radius is used.
 
-### 2.3 System Logic Suedocode
+### 2.3 System Logic Pseudocode
 
-<!-- TODO: Replace this outline with the exact logic of the custom algorithm. -->
+The following pseudocode summarizes the closed-loop system logic implemented by the orchestrator. It captures how perception outputs, confidence evaluation, next-best-view planning, and local navigation are combined into a single iterative active perception process.
 
-```text
-Input: recent pose estimates, robot pose, planner parameters
-Output: stop decision or next-best-view goal
+\begin{algorithm}
+\caption{Closed-Loop Active Perception Orchestration}
+\label{alg:active_perception_orchestrator}
+\begin{algorithmic}[1]
 
-1. Collect a fixed window of recent target pose estimates
-2. Compute confidence metrics from spatial and angular consistency
-3. If confidence exceeds threshold, stop and report final estimate
-4. Otherwise generate candidate viewpoints around the target
-5. Score each candidate using travel cost, visibility, and safety terms
-6. Select the best candidate and send it to navigation
-```
+\State Initialize empty pose-history buffer $\mathcal{H}$
+\State Set state $\gets$ WAITING\_FOR\_POSE
+\State Receive target pose samples from perception module
+\State Receive robot pose from localization / odometry module
+
+\While{system is running}
+
+    \If{no robot pose is available}
+        \State remain in WAITING\_FOR\_POSE
+        \State \textbf{continue}
+    \EndIf
+
+    \If{a new pose-estimate sample $s_k$ is received}
+        \State append $s_k$ to bounded history buffer $\mathcal{H}$
+        \State update latest target pose estimate
+    \EndIf
+
+    \If{$|\mathcal{H}| < N_{\min}$}
+        \State remain in WAITING\_FOR\_POSE
+        \State \textbf{continue}
+    \EndIf
+
+    \State set state $\gets$ EVALUATING
+    \State call confidence evaluator with history $\mathcal{H}$
+    \State receive confidence score $C_k$
+
+    \If{$C_k \geq \tau$}
+        \State set state $\gets$ DONE
+        \State report final target pose estimate
+        \State stop active perception loop
+    \Else
+        \State set state $\gets$ PLANNING\_NBV
+        \State call next-best-view planner using:
+        \Statex \hspace{\algorithmicindent} latest target pose,
+        \Statex \hspace{\algorithmicindent} latest robot pose,
+        \Statex \hspace{\algorithmicindent} planner parameters
+        \State receive best viewpoint $v_k^\star$
+
+        \If{NBV planning succeeds}
+            \State set state $\gets$ READY\_TO\_NAVIGATE
+            \State publish $v_k^\star$ as an odom-frame navigation goal
+            \State wait for navigation executor status
+            \If{navigation succeeds}
+                \State set state $\gets$ WAITING\_FOR\_POSE
+                \State continue observation from new viewpoint
+            \Else
+                \State set state $\gets$ WAITING\_FOR\_POSE
+            \EndIf
+        \Else
+            \State set state $\gets$ WAITING\_FOR\_POSE
+        \EndIf
+    \EndIf
+
+\EndWhile
+
+\end{algorithmic}
+\end{algorithm}
 
 
 
