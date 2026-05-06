@@ -29,7 +29,7 @@ This report is structured to match the Milestone 3 requirements for the final sc
 <!-- TODO: Replace this placeholder with the final graphical abstract image and caption. -->
 
 <div align="center">
-  <img src="{{ '/assets/images/report3_graphical_abstract_placeholder.png' | relative_url }}"
+  <img src="{{ '/assets/images/Graphical_Abstract.png' | relative_url }}"
        alt="Graphical abstract placeholder for the final project"
        width="90%">
 </div>
@@ -162,7 +162,7 @@ $$
 \mathcal{H}_k = \{s_1, \dots, s_N\},
 $$
 
-where each sample contains pose, point count, and anisotropy ratio. From this history, the confidence evaluator computes
+where each sample contains a pose estimate, the number of points in the segmented target cloud, and the anisotropy ratio returned by the pose-estimation stage. Over this history window, the confidence evaluator computes the position variance, the yaw variance, the mean point count, and the mean anisotropy ratio.
 
 $$
 \sigma_p^2 = \frac{1}{N}\sum_{i=1}^{N}
