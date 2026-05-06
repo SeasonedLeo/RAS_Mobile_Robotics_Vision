@@ -131,7 +131,7 @@ Practically, these parameters control the accuracy/robustness trade-off: higher 
 
 
 
-### 2.2 Orchestrator
+### 2.1.4 Orchestrator
 
 <!-- TODO: Replace the example equations below with the project-specific algorithm used in Milestone 3. -->
 
@@ -222,35 +222,6 @@ This section must present empirical evidence from the final mission and evaluate
 
 Document the robot configuration, sensing stack, environment conditions, object type(s), and any reset procedure used between trials.
 
-### 3.2 Accuracy: Ground Truth vs. Estimated Pose
-
-<!-- TODO: Insert time-series or spatial comparison plots here. -->
-
-<div align="center">
-  <img src="{{ '/assets/images/report3_accuracy_placeholder.png' | relative_url }}"
-       alt="Accuracy plot placeholder"
-       width="85%">
-</div>
-
-**Figure 3.1.** Placeholder for ground-truth versus estimated pose comparison.
-
-Discuss the estimation trend, steady-state behavior, and major failure cases visible in the plot.
-
-### 3.3 Error Analysis
-
-<!-- TODO: Add cross-track error, translational/rotational error, covariance growth, or equivalent uncertainty analysis. -->
-
-| Metric | Definition | Result |
-| :--- | :--- | :--- |
-| Mean position error | `TODO` | `TODO` |
-| Max position error | `TODO` | `TODO` |
-| Mean yaw error | `TODO` | `TODO` |
-| Cross-track error (CTE) | `TODO` | `TODO` |
-| Covariance / uncertainty trend | `TODO` | `TODO` |
-
-Explain what the error metrics reveal about the strongest and weakest parts of the system.
-
-### 3.4 Success Rate Across Trials
 
 <!-- TODO: Milestone 3 expects reliability data across at least 10 trials. -->
 
@@ -281,29 +252,7 @@ Summarize the main quantitative findings, identify bottlenecks, and explain whet
 
 This section should critically evaluate how the system affects people, environments, and downstream decision-making.
 
-### 4.1 Privacy
 
-<!-- TODO: Discuss what sensor data is collected, retained, displayed, or shared. -->
-
-Address image or point-cloud data handling, any blurring/anonymization strategy, and whether the system stores personally identifying information.
-
-### 4.2 Safety
-
-<!-- TODO: Discuss motion risk, collision risk, stopping behavior, and kinetic energy management. -->
-
-Evaluate the hazards introduced by autonomous motion, hardware limitations, and failure handling during the final mission.
-
-### 4.3 Bias and Limitations
-
-<!-- TODO: Discuss sensing bias such as material sensitivity, lighting dependence, occlusion, or geometry assumptions. -->
-
-Analyze how the chosen sensors or algorithms may underperform for specific objects, surfaces, or environments.
-
-### 4.4 Ethical Framework Analysis
-
-<!-- TODO: Explicitly discuss utilitarian and justice-based viewpoints as requested. -->
-
-Interpret the design tradeoffs through at least utilitarian and justice-oriented lenses, and note how future iterations should reduce harm and exclusion.
 
 ---
 
@@ -346,41 +295,6 @@ This appendix should make authorship auditable and match the Milestone 3 require
 | Mohammad Nasr | `Perception_Module` | `970c915, b180cfd, 4a9a162, 03b2bf6` | `cylinder_finder.py, box_finder.py, pose_estimator.py, confidence_evaluator.py, nbv_planner.py, orchestrator.py` |
 | Khaled | `Navigation_Module` | `e5e9469` | `navigation subsystem design and Nav2 integration artifacts` |
 
-### 6.1 Authorship Notes
 
-<!-- TODO: Clarify who authored which custom logic and who handled infrastructure/integration. -->
 
-Add a short note explaining how work was divided and how the commit history supports the claimed authorship.
 
-Localization authorship note (Vikas Narang): implemented and documented the ORB-SLAM3 stereo visual-odometry integration and EKF fusion configuration, including camera-topic interfaces, ORB configuration workflow, VO publication pipeline, and localization handoff to navigation modules.
-
-### 6.2 Audit Readiness Checklist
-
-* [ ] Every custom module named in the report has a direct GitHub link
-* [ ] Benchmarking includes evidence from at least 10 trials
-* [ ] Ground-truth vs. estimated performance plots are included
-* [ ] Error metrics are reported and interpreted
-* [ ] Ethical statement covers privacy, safety, and bias
-* [ ] Each team member has presentable, auditable technical ownership
-
----
-
-## 7. Presentation Support Notes
-
-<!-- Optional section kept here to help present directly from the report during the peer audit. -->
-
-### 7.1 Aim & Motivation
-
-Summarize the project motivation and the real-world problem being addressed.
-
-### 7.2 System Design
-
-Reference the ROS 2 graph, hardware setup, and module interactions from Reports 1 and 2.
-
-### 7.3 Custom Logic Deep Dive
-
-Point reviewers to the algorithm section above and the linked source files.
-
-### 7.4 Results & Ethical Defense
-
-Use the benchmarking plots, trial table, and ethical impact statement as the basis for the presentation discussion.
