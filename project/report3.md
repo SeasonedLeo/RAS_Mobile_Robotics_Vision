@@ -348,17 +348,13 @@ Every custom module discussed in this report must include a direct repository hy
 | `confidence_evaluator.py` | Confidence scoring service | `TODO` |
 | `nbv_planner.py` | Next-best-view planning | `TODO` |
 | `orchestrator.py` | Active perception coordination | `TODO` |
-| `orb_vo_node.py` | Visual odometry integration | `TODO` |
-| `ekf.yaml` / localization config | Sensor fusion configuration | `TODO` |
+| `orb_vo.yaml` | localization config | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/orb_vo.yaml` |
+| `orb_vo_node.py` | Visual odometry integration | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/orb_ekf/orb_vo_node.py` |
+| `ekf.yaml` / localization config | Sensor fusion configuration | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/ekf.yaml` |
 
 > Note: Replace each `TODO` entry with a clickable GitHub URL to the exact file and line number used in your implementation.
 {: .note }
 
-### 5.1 Localization Module Links (Vikas Narang)
-
-- `orb_vo_node.py`: `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/orb_ekf/orb_vo_node.py`
-- `orb_vo.yaml`: `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/orb_vo.yaml`
-- `ekf.yaml`: `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/ekf.yaml`
 
 ---
 
@@ -372,5 +368,5 @@ This appendix should make authorship auditable and match the Milestone 3 require
 | Student Name 2 | `TODO` | `TODO` | `TODO` |
 | Student Name 3 | `TODO` | `TODO` | `TODO` |
 | Vikas Narang | `Localization_Module (VO + EKF)` | `1 parent 3b519bc, 61fc196 (report contribution), ORB_EKF commits` | `src/ORB_EKF/orb_ekf/orb_vo_node.py, src/ORB_EKF/config/orb_vo.yaml, src/ORB_EKF/config/ekf.yaml` |
-| Mohammad Nasr | `Perception_Module` | `970c915, b180cfd, 4a9a162, 03b2bf6` | `cylinder_finder.py, box_finder.py, pose_estimator.py, confidence_evaluator.py, nbv_planner.py, orchestrator.py` |
+| Mohammad Nasr | `Perception & Planning Module` | `970c915, b180cfd, 4a9a162, 03b2bf6` | `cylinder_finder.py, box_finder.py, pose_estimator.py, confidence_evaluator.py, nbv_planner.py, orchestrator.py, odom_controller.py` |
 | Khaled | `Navigation_Module` | `e5e9469` | `navigation subsystem design and Nav2 integration artifacts` |
