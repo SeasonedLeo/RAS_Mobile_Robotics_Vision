@@ -86,7 +86,6 @@ Together, these two nodes provide the decision-making layer that closes the acti
 
 
 
-
 ### 2.1.2 (Visual Odometry or Estimation & Localization Module) Individual Localization Section (Vikas Narang): ORB-SLAM3 + EKF
 
 This section documents the localization module contribution based on ORB-SLAM3 stereo visual odometry integrated with EKF fusion.
@@ -202,22 +201,7 @@ Output: stop decision or next-best-view goal
 6. Select the best candidate and send it to navigation
 ```
 
-### 2.4 Code Traceability
 
-<!-- TODO: Add direct GitHub links to the exact source files and line numbers implementing the logic above. -->
-
-| Custom Module | Purpose | Repository Link |
-| :--- | :--- | :--- |
-| `pose_estimator` | Converts segmented target cloud into pose estimates | `TODO` |
-| `confidence_evaluator` | Computes confidence from a recent estimate history | `TODO` |
-| `nbv_planner` | Selects the next best view candidate | `TODO` |
-| `orchestrator` | Coordinates confidence checks and replanning | `TODO` |
-| `visual_odometry_node` (ORB-SLAM3) | Stereo visual odometry and camera-pose tracking | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/orb_ekf/orb_vo_node.py` |
-| `ekf_node` configuration | VO + wheel odometry fusion settings | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/ekf.yaml` |
-
-
-
----
 
 ## 3. Benchmarking & Results
 
