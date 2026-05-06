@@ -246,9 +246,21 @@ N \geq N_{\min}
 C_k \geq \tau,
 $$
 
-otherwise it requests a next-best-view. In the current implementation, \(N_{\min}=10\).
+otherwise it requests a next-best-view.
 
-For next-best-view planning, let \(\mathcal{V}=\{v_i\}_{i=1}^{M}\) denote the candidate viewpoints generated around the current target estimate. Each candidate is scored by
+$$
+N_{\min} = 10
+$$
+
+in the current implementation.
+
+For next-best-view planning, let the candidate viewpoint set be
+
+$$
+\mathcal{V} = \{v_i\}_{i=1}^{M},
+$$
+
+where each \(v_i\) is a candidate robot observation pose generated around the current target estimate. Each candidate is then scored by
 
 $$
 J(v_i)=
@@ -259,7 +271,7 @@ J(v_i)=
 \gamma \frac{|\operatorname{wrap}(\theta_i-\theta_k)|}{\pi},
 $$
 
-where \(r_i\) is the candidate radius from the target, \(r_d\) is the desired radius, \(d_i\) is the robot travel distance to the candidate, and \(\theta_i\) is the candidate viewing yaw. The planner then selects
+In this cost function, \(r_i\) denotes the candidate radius from the target, \(r_d\) denotes the desired observation radius, \(d_i\) denotes the robot travel distance from its current pose to the candidate, and \(\theta_i\) denotes the candidate viewing yaw. The term \(\theta_k\) denotes the robot’s current yaw in the planning frame. The planner then selects
 
 $$
 v_k^\star = \arg\min_{v_i \in \mathcal{V}_{\text{valid}}} J(v_i),
