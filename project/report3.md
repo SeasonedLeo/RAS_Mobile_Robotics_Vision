@@ -143,7 +143,9 @@ The `odom_controller.py` node subscribes to an `odom`-frame navigation goal and 
 
 ### 2.1.4 Orchestrator
 
-<!-- TODO: Replace the example equations below with the project-specific algorithm used in Milestone 3. -->
+The orchestrator structure was already introduced in Report 2, and its core role remained unchanged in the final system. Its main responsibility is to connect the perception, planning, and motion-execution modules into a closed-loop active perception process. In the final implementation, this role was extended to include the local navigation executor: once a next-best-view pose is selected, the orchestrator publishes the corresponding `odom`-frame goal and waits for the navigation status before resuming perception.
+
+Operationally, the orchestrator stores a bounded history of pose-estimate samples, waits until a minimum history length is available, calls the confidence-evaluation service, and either terminates the active perception loop or requests a next-best-view from the planner. If a new viewpoint is required, the selected goal is sent to the local controller, and the orchestrator returns to the observation state after navigation completes successfully. This makes the orchestrator the supervisory logic that manages state transitions between observation, evaluation, replanning, and motion execution.
 
 Let the robot pose in the planning frame be
 
@@ -156,7 +158,7 @@ y_k \\
 \end{bmatrix},
 $$
 
-and let the object estimate at step \(k\) be
+and let the target pose estimate at step \(k\) be
 
 $$
 \hat{\mathbf{o}}_k =
@@ -167,27 +169,109 @@ $$
 \end{bmatrix}.
 $$
 
-If the system maintains a confidence score over a window of \(N\) estimates, one generic formulation is
+Let the recent history of pose-estimate samples be
+
+$$
+\mathcal{H}_k = \{s_1, \dots, s_N\},
+$$
+
+where each sample contains pose, point count, and anisotropy ratio. From this history, the confidence evaluator computes
+
+$$
+\sigma_p^2 = \frac{1}{N}\sum_{i=1}^{N}
+\left\|
+\begin{bmatrix}
+x_i \\
+y_i
+\end{bmatrix}
+-
+\begin{bmatrix}
+\bar{x} \\
+\bar{y}
+\end{bmatrix}
+\right\|^2,
+$$
+
+$$
+\sigma_\psi^2 = \frac{1}{N}\sum_{i=1}^{N}
+\operatorname{wrap}(\psi_i-\bar{\psi})^2,
+$$
+
+$$
+\bar{n} = \frac{1}{N}\sum_{i=1}^{N} n_i,
+\qquad
+\bar{a} = \frac{1}{N}\sum_{i=1}^{N} a_i.
+$$
+
+These quantities are converted into bounded component scores:
+
+$$
+S_p = \frac{1}{1+\sigma_p^2/\eta_p}, \qquad \eta_p = 0.005,
+$$
+
+$$
+S_\psi = \frac{1}{1+\sigma_\psi^2/\eta_\psi}, \qquad \eta_\psi = 0.08,
+$$
+
+$$
+S_n = \operatorname{clip}\left(\frac{\bar{n}}{\eta_n}, 0, 1\right),
+\qquad \eta_n = 200,
+$$
+
+$$
+S_a = \operatorname{clip}\left(\frac{\bar{a}}{\eta_a}, 0, 1\right),
+\qquad \eta_a = 0.5.
+$$
+
+The final confidence score is
 
 $$
 C_k = w_p S_p + w_\psi S_\psi + w_n S_n + w_a S_a,
 $$
 
-where \(S_p\) is positional stability, \(S_\psi\) is yaw stability, \(S_n\) is observation support, and \(S_a\) is a shape-quality or anisotropy term.
-
-If a next-best-view candidate set \(\mathcal{V} = \{v_i\}_{i=1}^{M}\) is evaluated, the planner may select
+where the current implementation uses
 
 $$
-v^\star = \arg\min_{v_i \in \mathcal{V}} J(v_i),
+w_p = 0.3,\qquad
+w_\psi = 0.2,\qquad
+w_n = 0.1,\qquad
+w_a = 0.15.
 $$
 
-with
+The orchestrator stops active perception if
 
 $$
-J(v_i) = \alpha d(v_i, \mathbf{x}_k) + \beta h(v_i, \hat{\mathbf{o}}_k) + \gamma r(v_i),
+N \geq N_{\min}
+\quad \text{and} \quad
+C_k \geq \tau,
 $$
 
-where \(d\) penalizes travel cost, \(h\) rewards view geometry, and \(r\) captures risk or constraint violations.
+otherwise it requests a next-best-view. In the current implementation, \(N_{\min}=10\).
+
+For next-best-view planning, let \(\mathcal{V}=\{v_i\}_{i=1}^{M}\) denote the candidate viewpoints generated around the current target estimate. Each candidate is scored by
+
+$$
+J(v_i)=
+\alpha \frac{|r_i-r_d|}{r_d}
++
+\beta \frac{d_i}{r_{\max}}
++
+\gamma \frac{|\operatorname{wrap}(\theta_i-\theta_k)|}{\pi},
+$$
+
+where \(r_i\) is the candidate radius from the target, \(r_d\) is the desired radius, \(d_i\) is the robot travel distance to the candidate, and \(\theta_i\) is the candidate viewing yaw. The planner then selects
+
+$$
+v_k^\star = \arg\min_{v_i \in \mathcal{V}_{\text{valid}}} J(v_i),
+$$
+
+after rejecting candidates whose travel distance is below a minimum threshold. The current implementation uses
+
+$$
+\alpha = 0.2,\qquad \beta = 0.1,\qquad \gamma = 0.2.
+$$
+
+When radius randomization is enabled, each candidate radius is sampled in the interval \([r_{\min}, r_{\max}]\); otherwise a fixed or adaptive base radius is used.
 
 ### 2.3 System Logic Suedocode
 
