@@ -29,7 +29,7 @@ This report is structured to match the Milestone 3 requirements for the final sc
 <!-- TODO: Replace this placeholder with the final graphical abstract image and caption. -->
 
 <div align="center">
-  <img src="{{ '/assets/images/Graphical_Abstract.png' | relative_url }}"
+  <img src="{{ '/assets/images/Graphical_Abstract_v2.png' | relative_url }}"
        alt="Graphical abstract placeholder for the final project"
        width="90%">
 </div>
