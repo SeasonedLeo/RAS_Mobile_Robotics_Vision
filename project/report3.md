@@ -71,7 +71,7 @@ Together, these two nodes provide the decision-making layer that closes the acti
 
 
 
-### 2.1.2 (Visual Odometry or Estimation & Localization Module) Individual Localization Section (Vikas Narang): ORB-SLAM3 + EKF
+### 2.1.3 (Visual Odometry or Estimation & Localization Module) Individual Localization Section (Vikas Narang): ORB-SLAM3 + EKF
 
 This section documents the localization module contribution based on ORB-SLAM3 stereo visual odometry integrated with EKF fusion.
 
@@ -116,7 +116,7 @@ Practically, these parameters control the accuracy/robustness trade-off: higher 
 
 
 
-### 2.1.3 Navigation, Control, Actuation Module
+### 2.1.4 Navigation, Control, Actuation Module
 
 The navigation and actuation role of the system was initially intended to be handled through Nav2, as discussed in Report 2. In the final implementation, however, Nav2 was replaced by a lightweight local controller implemented in `odom_controller.py`. This change was made because the final system operates without a global map and expresses all perception and planning outputs directly in the `odom` frame. Since Nav2 typically assumes a map-based navigation setup, it was not well aligned with the final local active perception pipeline.
 
@@ -126,7 +126,7 @@ The `odom_controller.py` node subscribes to an `odom`-frame navigation goal and 
 
 
 
-### 2.1.4 Orchestrator
+### 2.1.5 Orchestrator
 
 The orchestrator structure was already introduced in Report 2, and its core role remained unchanged in the final system. Its main responsibility is to connect the perception, planning, and motion-execution modules into a closed-loop active perception process. In the final implementation, this role was extended to include the local navigation executor: once a next-best-view pose is selected, the orchestrator publishes the corresponding `odom`-frame goal and waits for the navigation status before resuming perception.
 
@@ -272,63 +272,6 @@ $$
 
 When radius randomization is enabled, each candidate radius is sampled in the interval \([r_{\min}, r_{\max}]\); otherwise a fixed or adaptive base radius is used.
 
-### 2.3 System Logic Pseudocode
-
-The following pseudocode summarizes the closed-loop system logic implemented by the orchestrator. It captures how perception outputs, confidence evaluation, next-best-view planning, and local navigation are combined into a single iterative active perception process.
-
-```text
-Algorithm: Closed-Loop Active Perception Orchestration
-
-Initialize empty pose-history buffer H
-Set state = WAITING_FOR_POSE
-Receive target pose samples from perception module
-Receive robot pose from localization / odometry module
-
-While system is running:
-
-    If no robot pose is available:
-        remain in WAITING_FOR_POSE
-        continue
-
-    If a new pose-estimate sample s_k is received:
-        append s_k to bounded history buffer H
-        update latest target pose estimate
-
-    If |H| < N_min:
-        remain in WAITING_FOR_POSE
-        continue
-
-    set state = EVALUATING
-    call confidence evaluator with history H
-    receive confidence score C_k
-
-    If C_k >= tau:
-        set state = DONE
-        report final target pose estimate
-        stop active perception loop
-
-    Else:
-        set state = PLANNING_NBV
-        call next-best-view planner using:
-            - latest target pose
-            - latest robot pose
-            - planner parameters
-        receive best viewpoint v_k*
-
-        If NBV planning succeeds:
-            set state = READY_TO_NAVIGATE
-            publish v_k* as an odom-frame navigation goal
-            wait for navigation executor status
-
-            If navigation succeeds:
-                set state = WAITING_FOR_POSE
-                continue observation from new viewpoint
-            Else:
-                set state = WAITING_FOR_POSE
-
-        Else:
-            set state = WAITING_FOR_POSE
-```
 
 
 
