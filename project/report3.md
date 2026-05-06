@@ -38,21 +38,8 @@ This report is structured to match the Milestone 3 requirements for the final sc
 
 ### 1.1 Project Mission
 
-<!-- TODO: Summarize the project objective in 2-4 sentences for an interdisciplinary audience. -->
+This project addresses the problem of localizing a target object using a mobile robot in an indoor environment without relying on a pre-built map. The robot observes the scene with onboard vision sensors, estimates the object pose in its local odometry frame, and evaluates whether that estimate is reliable enough for use. When confidence is low, the robot autonomously moves to a better nearby viewpoint and repeats the estimation process. The mission objective is to achieve more reliable object localization through closed-loop active perception rather than a single static observation
 
-State the problem the robot solves, the operating setting, and the mission objective in concise non-specialist language.
-
-### 1.2 Key Technical Idea
-
-<!-- TODO: Briefly explain the main algorithmic idea shown in the graphic. -->
-
-Summarize the custom perception, estimation, and decision logic highlighted in the graphical abstract.
-
-### 1.3 Final Outcome Snapshot
-
-<!-- TODO: Add 1 short paragraph describing the final mission result shown in the abstract. -->
-
-Provide a concise outcome statement supported by the main result visual or benchmark.
 
 ---
 
@@ -202,6 +189,8 @@ $$
 \qquad
 \bar{a} = \frac{1}{N}\sum_{i=1}^{N} a_i.
 $$
+
+Here, \(n_i\) denotes the point count of the \(i\)-th pose-estimate sample, and \(a_i\) denotes its anisotropy ratio. Therefore, \(\bar{n}\) is the mean point count over the history window, and \(\bar{a}\) is the mean anisotropy ratio over the same window.
 
 These quantities are converted into bounded component scores:
 
@@ -385,5 +374,3 @@ This appendix should make authorship auditable and match the Milestone 3 require
 | Vikas Narang | `Localization_Module (VO + EKF)` | `1 parent 3b519bc, 61fc196 (report contribution), ORB_EKF commits` | `src/ORB_EKF/orb_ekf/orb_vo_node.py, src/ORB_EKF/config/orb_vo.yaml, src/ORB_EKF/config/ekf.yaml` |
 | Mohammad Nasr | `Perception_Module` | `970c915, b180cfd, 4a9a162, 03b2bf6` | `cylinder_finder.py, box_finder.py, pose_estimator.py, confidence_evaluator.py, nbv_planner.py, orchestrator.py` |
 | Khaled | `Navigation_Module` | `e5e9469` | `navigation subsystem design and Nav2 integration artifacts` |
-
-
