@@ -113,16 +113,14 @@ $$
 
 where `T_cw^(k)` is the camera pose returned by the backend at frame `k`. The node first inverts it to get camera pose in the ORB reference frame:
 
-$$
-\mathbf{T}_{wc,\mathrm{orb}}^{(k)} = \left(\mathbf{T}_{cw}^{(k)}\right)^{-1}
-$$
 
 Then this trajectory is aligned to `odom` (startup anchoring) before publishing:
 $$
-\mathbf{T}_{odom,c}^{(k)} = \mathbf{T}_{odom,\mathrm{orb}}\,\mathbf{T}_{wc,\mathrm{orb}}^{(k)}
+\mathbf{T}_{odom,c}^{(k)} = \mathbf{T}_{cw}\,\mathbf{T}_{orb,c}^{(k)}
 $$
 
-The aligned pose is transformed into robot planar motion and published as `/orb_slam/vo_odom`, while the full history is appended to `/orb_slam/vo_path`.
+Both `orb` and `odom` are local startup-referenced frames (no global map frame is used).  
+The aligned local pose is transformed into robot planar motion and published as `/orb_slam/vo_odom`, while the full history is appended to `/orb_slam/vo_path`.
 
 ##### Block A: Stereo Images
 
