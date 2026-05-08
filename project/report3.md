@@ -341,7 +341,7 @@ The navigation and actuation role of the system was initially intended to be han
 
 An alternative attempt was made to use SLAM Toolbox in order to provide the mapping layer required for Nav2, but this integration was not brought to a stable operational state during the project. For this reason, the final system adopted a simpler local-control formulation that directly drives the TurtleBot4 to a goal pose in the `odom` frame.
 
-The `odom_controller.py` node subscribes to an `odom`-frame navigation goal and the robot odometry feedback, then publishes velocity commands to drive the robot toward the requested viewpoint. The controller uses proportional control for linear motion and PD control for heading correction, with bounded linear and angular velocities, a rotate-in-place mode for large heading errors, and separate tolerances for final position and yaw convergence. In this way, the module provides the final execution link between the viewpoint selected by the planner and the physical robot motion required to acquire the next observation.
+The `odom_controller.py` node subscribes to an `odom`-frame navigation goal and the robot odometry feedback ( either robot odom or visual odometry), then publishes velocity commands to drive the robot toward the requested viewpoint. The controller uses proportional control for linear motion and PD control for heading correction, with bounded linear and angular velocities, a rotate-in-place mode for large heading errors, and separate tolerances for final position and yaw convergence. In this way, the module provides the final execution link between the viewpoint selected by the planner and the physical robot motion required to acquire the next observation.
 
 
 
@@ -504,6 +504,21 @@ The experimental platform is a TurtleBot4 operating in an indoor environment usi
 
 ### 3.2 Experimental Results
 
+The main input to the system is the raw point cloud, and obtaining this data stream reliably was the most time-consuming hardware and integration challenge of the project. The system required raw point clouds for box and cylinder detection, while the visual odometry module simultaneously required synchronized left and right camera streams. After extensive testing with multiple configurations, we established a workable pipeline by streaming RGB and depth data in compressed form and at reduced image resolution. The compressed image streams were decompressed on the external PC using the image_transport package, and raw point clouds were then reconstructed on the PC using depth_image_proc before being passed to the perception nodes.
+
+Although this configuration provided the best overall solution, the networked sensor pipeline remained unreliable. In practice, the RGB, depth, and stereo camera streams were not always published consistently, which significantly limited the ability to execute trials in a repeatable and stable manner.
+
+When the required data streams were available, however, the perception and planning pipeline operated as intended. The perception module successfully detected the brown box, the pose estimator computed the target pose and transformed it into the odom frame, and the confidence evaluator was triggered after collecting 10 pose samples. When the confidence score remained below the specified threshold, the system correctly requested a next-best-view update. The NBV planner then generated candidate viewpoints and selected the best one according to the implemented cost function. Overall, the perception and planning modules behaved reliably given valid incoming data. Figure 2 shows a representative system snapshot after a next-best-view had been generated.
+
+
+<div align="center">
+  <img src="{{ '/assets/images/pp_demo.jpg' | relative_url }}"
+       alt="VO and odometry trajectory comparison on ROS bag data"
+       width="80%">
+</div>
+
+**Figure 2.** System Snapshot after a Next-Best-View had been Generated.
+
 
 
 
@@ -522,7 +537,7 @@ The ROS bag comparison between visual odometry (VO) and wheel odometry (`/odom`)
        width="80%">
 </div>
 
-**Figure 3.5.** VO (`/orb_slam/vo_path`, blue) vs wheel odometry (`/odom`, green) trajectory comparison from ROS bag playback.
+**Figure 3.** VO (`/orb_slam/vo_path`, blue) vs wheel odometry (`/odom`, green) trajectory comparison from ROS bag playback.
 
 | Path Segment | VO | Odom |
 | :--- | :--- | :--- |
