@@ -534,7 +534,36 @@ Summarize the main quantitative findings, identify bottlenecks, and explain whet
 
 <!-- Milestone 3 requests roughly 300 words covering privacy, safety, and bias. -->
 
-This section should critically evaluate how the system affects people, environments, and downstream decision-making.
+This project combines perception, localization, and autonomous motion (`odom`-frame local navigation) to improve object pose estimation through active viewpoint selection. Because the robot uses RGB-D sensing and moves near people/obstacles, ethical analysis is required at both micro-ethics (engineering decisions in implementation) and macro-ethics (system effects on users and bystanders).
+
+### 4.1 Ethics Scorecard (Formal Tests)
+
+| Test | Status | Reasoning (Cite Part 1 Definitions) |
+| :--- | :--- | :--- |
+| **Utilitarian Test** | **Pass (Conditional)** | The active-perception loop improves mission success (better object localization) and reduces repeated manual intervention, which creates clear operational benefit. However, benefit depends on safe execution and sensor reliability; if localization degrades, utility drops quickly. |
+| **Justice Test** | **Partial / Needs Improvement** | The system does not intentionally classify people by sensitive attributes, but fairness is not yet formally audited across lighting, texture, object material, and occlusion conditions. Uneven error rates across environments can create unequal burden (e.g., poorer performance in cluttered or reflective scenes). |
+| **Virtue Test** | **Pass (Conditional)** | The implementation shows responsible engineering intent: explicit safety monitoring, conservative goal execution, and transparent module traceability. Remaining virtue gap: incomplete quantitative safety/fairness validation before claiming production readiness. |
+
+### 4.2 Privacy
+
+The robot consumes camera streams and point clouds that can incidentally capture people in indoor environments. In the current pipeline, data is primarily used for online processing (feature extraction, stereo matching, VO/path estimation) rather than identity analytics. No face recognition or person re-identification is implemented. Ethical risk remains if raw recordings are stored or shared without policy controls. Recommended practice is data minimization: store only what is needed for debugging, limit retention duration, and remove personal imagery from public artifacts.
+
+### 4.3 Safety
+
+The dominant ethical risk is physical harm from autonomous motion. This project addresses safety through bounded local control, `odom`-frame goal execution, and stop-oriented behavior when sensing/localization quality is poor. Safety intent is consistent with the project scope in Reports 1 and 2: avoid unsafe continuation under stale or unreliable state estimates. Residual risk remains in edge cases such as dynamic obstacles, abrupt VO degradation, and timing mismatch between sensing and actuation. Therefore, conservative velocity bounds and robust stop conditions are ethically required, not optional.
+
+### 4.4 Bias and Technical Limitations
+
+Perception quality depends strongly on texture, illumination, synchronization quality, and geometric visibility. ORB-based VO and stereo depth can underperform in low-texture scenes, glare, blur, and partial occlusion. This is a technical bias source: performance is not uniform across all operating contexts. If unreported, this can create misleading trust in autonomy. Ethical reporting therefore requires explicit disclosure of known failure modes and quantitative error ranges.
+
+### 4.5 Ethical Framework Interpretation and Engineering Fixes
+
+From a utilitarian view, the system is justified when total safety and task benefit exceed deployment risk. From a justice view, fairness requires validation across diverse scenes and operating conditions, not only nominal runs. From a virtue view, engineers should prioritize transparent limitations and fail-safe behavior over optimistic claims.
+
+Immediate engineering fixes:
+1. Add a formal pre-deployment checklist with localization confidence and sensor-freshness gates before motion authorization.
+2. Add fairness-style robustness tests across at least multiple lighting/texture/object conditions and report per-condition failure rates.
+3. Add strict data-handling policy for camera recordings (retention limit and anonymization for shared media).
 
 
 
