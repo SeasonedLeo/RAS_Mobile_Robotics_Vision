@@ -92,13 +92,13 @@ ORB-SLAM3 estimates the camera pose by repeatedly solving a geometric consistenc
 
 ```mermaid
 flowchart LR
-  A[Stereo images I_L, I_R] --> B[ORB keypoints + descriptors]
-  B --> C[Stereo matching and temporal tracking]
-  C --> D[Depth from disparity and 3D points]
-  D --> E[Pose optimization in SE(3)]
-  E --> F[Local map update + bundle adjustment]
-  F --> G[ROS2 outputs /vo/pose and /vo/odometry]
-  G --> H[EKF fusion with wheel odometry]
+  A["Stereo images: I_L, I_R"] --> B["ORB keypoints and descriptors"]
+  B --> C["Stereo matching and temporal tracking"]
+  C --> D["Depth from disparity and 3D points"]
+  D --> E["Pose optimization on rigid-body motion"]
+  E --> F["Local map update and bundle adjustment"]
+  F --> G["ROS2 outputs: vo pose and vo odometry"]
+  G --> H["EKF fusion with wheel odometry"]
 ```
 
 For each frame \(k\), the projection model is:
