@@ -403,9 +403,6 @@ This appendix should make authorship auditable and match the Milestone 3 require
 
 | Team Member | Primary Technical Role | Key Git Commits / PRs | Specific File(s) Authorship |
 | :--- | :--- | :--- | :--- |
-| Student Name 1 | `TODO` | `TODO` | `TODO` |
-| Student Name 2 | `TODO` | `TODO` | `TODO` |
-| Student Name 3 | `TODO` | `TODO` | `TODO` |
-| Vikas Narang | `Localization_Module (VO + EKF)` | `1 parent 3b519bc, 61fc196 (report contribution), ORB_EKF commits` | `src/ORB_EKF/orb_ekf/orb_vo_node.py, src/ORB_EKF/config/orb_vo.yaml, src/ORB_EKF/config/ekf.yaml` |
 | Mohammad Nasr | `Perception & Planning Module` | `970c915, b180cfd, 4a9a162, 03b2bf6` | `cylinder_finder.py, box_finder.py, pose_estimator.py, confidence_evaluator.py, nbv_planner.py, orchestrator.py, odom_controller.py` |
+| Vikas Narang | `Localization_Module (VO + EKF)` | `1 parent 3b519bc, 61fc196 (report contribution), ORB_EKF commits` | `src/ORB_EKF/orb_ekf/orb_vo_node.py, src/ORB_EKF/config/orb_vo.yaml, src/ORB_EKF/config/ekf.yaml` |
 | Khaled | `Navigation_Module` | `e5e9469` | `navigation subsystem design and Nav2 integration artifacts` |
