@@ -71,7 +71,7 @@ Together, these two nodes provide the decision-making layer that closes the acti
 
 
 
-### 2.1.3 (Visual Odometry or Estimation & Localization Module) Individual Localization Section: ORB-SLAM3 + EKF
+### 2.1.3 Visual Odometry or Estimation & Localization Module, ORB-SLAM3 + EKF
 
 This section documents the localization module contribution based on ORB-SLAM3 stereo visual odometry integrated with EKF fusion.
 
@@ -97,8 +97,8 @@ flowchart TB
   B --> C["Stereo + Temporal Matching"]
   C --> D["Depth from Disparity"]
   D --> E["Pose Optimization"]
-  E --> G["Publish VO Pose/Odom"]
-  F --> H["EKF Fusion"]
+  E --> F["Publish VO Pose/Odom"]
+  F --> G["EKF Fusion"]
 ```
 
 The Mermaid pipeline above can be explained as: ORB-SLAM3 computes a camera trajectory from stereo images, and this project publishes that trajectory as VO odometry/path.
@@ -111,13 +111,18 @@ $$
 \mathbf{T}_{cw}^{(k)} = \texttt{TrackStereo}(I_L^k, I_R^k, t_k),
 $$
 
-where `T_cw^(k)` is the camera pose returned by the backend at frame `k`. The node then converts to world-to-camera form:
+where `T_cw^(k)` is the camera pose returned by the backend at frame `k`. The node first inverts it to get camera pose in the ORB reference frame:
 
 $$
-\mathbf{T}_{wc}^{(k)} = \left(\mathbf{T}_{cw}^{(k)}\right)^{-1}.
+\mathbf{T}_{wc,\mathrm{orb}}^{(k)} = \left(\mathbf{T}_{cw}^{(k)}\right)^{-1}
 $$
 
-That pose is transformed into robot planar motion and published as `/orb_slam/vo_odom`, while the full history is appended to `/orb_slam/vo_path`.
+Then this trajectory is aligned to `odom` (startup anchoring) before publishing:
+$$
+\mathbf{T}_{odom,c}^{(k)} = \mathbf{T}_{odom,\mathrm{orb}}\,\mathbf{T}_{wc,\mathrm{orb}}^{(k)}
+$$
+
+The aligned pose is transformed into robot planar motion and published as `/orb_slam/vo_odom`, while the full history is appended to `/orb_slam/vo_path`.
 
 ##### Block A: Stereo Images
 
