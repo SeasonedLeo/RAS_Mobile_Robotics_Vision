@@ -510,7 +510,7 @@ The experimental platform is a TurtleBot4 operating in an indoor environment usi
 
 ### 3.2.1 Demo Links
 
-- `Perception & Planning Demo : `
+- `Perception & Planning Demo :` [https://youtu.be/uHptjgO3Q7Y](https://youtu.be/uHptjgO3Q7Y)
 
 ### 3.3 Discussion of Results
 
