@@ -524,9 +524,25 @@ Document the robot configuration, sensing stack, environment conditions, object 
 
 ### 3.5 Discussion of Results
 
-<!-- TODO: Interpret the evidence rather than only listing numbers. -->
+The ROS bag trajectory comparison between visual odometry (VO) and wheel odometry (`/odom`) shows that both estimates follow the same global motion pattern, including the initial straight segment, left-turn rise, and large loop return. This indicates that the stereo ORB-SLAM3 pipeline is tracking motion consistently at the shape level.
 
-Summarize the main quantitative findings, identify bottlenecks, and explain whether the system met the project objective under the tested conditions.
+<div align="center">
+  <img src="{{ '/assets/images/report3_vo_vs_odom_bag.png' | relative_url }}"
+       alt="VO and odometry trajectory comparison on ROS bag data"
+       width="80%">
+</div>
+
+**Figure 3.5.** VO (`/orb_slam/vo_path`, blue) vs wheel odometry (`/odom`, green) trajectory comparison from ROS bag playback.
+
+Observed behavior from the plot:
+- The early path segment overlaps closely, confirming good startup alignment between the two estimates.
+- During the looped section, VO and odometry diverge gradually, which is expected from accumulated drift and different sensor error characteristics.
+- VO captures the overall loop geometry with similar trend but shows larger deviation near the far-right and lower-loop portions.
+
+Interpretation:
+- The localization module meets the core objective of producing a stable, metric VO trajectory from stereo camera data.
+- The remaining gap between VO and wheel odometry indicates that calibration/timing quality and fusion tuning are still the main bottlenecks for final accuracy.
+- This result is consistent with earlier findings in Report 2: stereo synchronization quality and long-horizon drift behavior dominate localization error.
 
 ---
 
