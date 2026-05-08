@@ -496,7 +496,7 @@ When radius randomization is enabled, each candidate radius is sampled in the in
 
 ## 3. Benchmarking & Results
 
-This section must present empirical evidence from the final mission and evaluate how well the system performed, even if the final demonstration was only partially successful.
+
 
 ### 3.1 Experimental Setup
 
@@ -522,7 +522,7 @@ Document the robot configuration, sensing stack, environment conditions, object 
 
 ### 3.5 Discussion of Results
 
-The ROS bag trajectory comparison between visual odometry (VO) and wheel odometry (`/odom`) shows that both estimates follow the same global motion pattern, including the initial straight segment, left-turn rise, and large loop return. This indicates that the stereo ORB-SLAM3 pipeline is tracking motion consistently at the shape level.
+The ROS bag comparison between visual odometry (VO) and wheel odometry (`/odom`) shows strong agreement in the straight segment and larger divergence in the curved/loop segment.
 
 <div align="center">
   <img src="{{ '/assets/images/report3_vo_vs_odom_bag.png' | relative_url }}"
@@ -532,15 +532,22 @@ The ROS bag trajectory comparison between visual odometry (VO) and wheel odometr
 
 **Figure 3.5.** VO (`/orb_slam/vo_path`, blue) vs wheel odometry (`/odom`, green) trajectory comparison from ROS bag playback.
 
-Observed behavior from the plot:
-- The early path segment overlaps closely, confirming good startup alignment between the two estimates.
-- During the looped section, VO and odometry diverge gradually, which is expected from accumulated drift and different sensor error characteristics.
-- VO captures the overall loop geometry with similar trend but shows larger deviation near the far-right and lower-loop portions.
+| Path Segment | VO | Odom |
+| :--- | :--- | :--- |
+| Straight path | Closely follows odom trend with small jitter; good startup alignment. | Smooth baseline trajectory with low short-horizon drift. |
+| Curved path | Tracks loop shape but drifts outward and accumulates larger offset. | Tighter and smoother loop estimate compared to VO. |
+
+Estimated position error values from the VO-vs-odom error plot (`2127` samples):
+
+| Segment | Approx. Time Window | Error Range (m) | Representative Error (m) | Peak Error (m) |
+| :--- | :--- | :--- | :--- | :--- |
+| Straight path | `0-30 s` | `0.00-0.09` | `~0.05` | `~0.09` |
+| Curved path | `30-70 s` | `0.09-0.24` | `~0.18` | `~0.24` |
 
 Interpretation:
-- The localization module meets the core objective of producing a stable, metric VO trajectory from stereo camera data.
-- The remaining gap between VO and wheel odometry indicates that calibration/timing quality and fusion tuning are still the main bottlenecks for final accuracy.
-- This result is consistent with earlier findings in Report 2: stereo synchronization quality and long-horizon drift behavior dominate localization error.
+- Straight motion remains well aligned, confirming that the VO pipeline is stable for low-curvature motion.
+- Error grows mainly during long curved motion, indicating accumulated drift and heading sensitivity.
+- This matches the localization risk identified earlier: synchronization quality and long-horizon drift dominate final accuracy.
 
 ---
 
