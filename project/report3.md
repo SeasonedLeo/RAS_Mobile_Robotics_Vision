@@ -91,14 +91,15 @@ Stereo intrinsics and baseline are consumed through calibration/configuration pa
 ORB-SLAM3 estimates the camera pose by repeatedly solving a geometric consistency problem between image observations and a 3D map.
 
 ```mermaid
-flowchart LR
-  A["Stereo images: I_L, I_R"] --> B["ORB keypoints and descriptors"]
-  B --> C["Stereo matching and temporal tracking"]
-  C --> D["Depth from disparity and 3D points"]
-  D --> E["Pose optimization on rigid-body motion"]
-  E --> F["Local map update and bundle adjustment"]
-  F --> G["ROS2 outputs: vo pose and vo odometry"]
-  G --> H["EKF fusion with wheel odometry"]
+%%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"nodeSpacing": 45, "rankSpacing": 65}}}%%
+flowchart TB
+  A["Stereo Images"] --> B["ORB Features"]
+  B --> C["Stereo + Temporal Matching"]
+  C --> D["Depth from Disparity"]
+  D --> E["Pose Optimization"]
+  E --> F["Local Bundle Adjustment"]
+  F --> G["Publish VO Pose/Odom"]
+  G --> H["EKF Fusion"]
 ```
 
 For each frame \(k\), the projection model is:
