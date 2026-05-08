@@ -88,16 +88,72 @@ Stereo intrinsics and baseline are consumed through calibration/configuration pa
 
 #### How ORB-SLAM3 Works in This Project
 
-At each synchronized stereo frame pair, ORB-SLAM3 performs the following processing stages:
+ORB-SLAM3 estimates the camera pose by repeatedly solving a geometric consistency problem between image observations and a 3D map.
 
-1. Extract ORB keypoints and descriptors from left/right images.
-2. Match descriptors to build stereo correspondences and temporal feature tracks.
-3. Estimate camera motion from geometric constraints and tracked features.
-4. Triangulate sparse 3D map points from stereo disparity.
-5. Refine pose/map consistency through internal local optimization.
-6. Publish local visual odometry as ROS 2 pose/odometry outputs for downstream fusion.
+```mermaid
+flowchart LR
+  A[Stereo images I_L, I_R] --> B[ORB keypoints + descriptors]
+  B --> C[Stereo matching and temporal tracking]
+  C --> D[Depth from disparity and 3D points]
+  D --> E[Pose optimization in SE(3)]
+  E --> F[Local map update + bundle adjustment]
+  F --> G[ROS2 outputs /vo/pose and /vo/odometry]
+  G --> H[EKF fusion with wheel odometry]
+```
 
-The localization output is relative to startup and can drift over long operation. To stabilize deployment for navigation, the VO estimate is fused with wheel odometry in EKF (`robot_localization`), providing a smoother and more robust `odom` estimate for planning/control.
+For each frame \(k\), the projection model is:
+
+$$
+\mathbf{u} \sim \mathbf{K}\,[\mathbf{R}_k \mid \mathbf{t}_k]\,\mathbf{X},
+$$
+
+where \(\mathbf{K}\) is the camera intrinsic matrix, \((\mathbf{R}_k,\mathbf{t}_k)\) is the camera pose, and \(\mathbf{X}\) is a 3D landmark.
+
+In stereo, depth is recovered from disparity:
+
+$$
+Z = \frac{f_x\,b}{d}, \quad d = u_L - u_R,
+$$
+
+where \(b\) is baseline and \(f_x\) is focal length in pixels. This gives metric-scale 3D points directly (major advantage over monocular VO).
+
+ORB features are extracted with FAST corners + orientation + BRIEF-style binary descriptors. Matches are formed:
+1. Left-right (same time) for disparity/depth.
+2. Frame-to-frame (time \(k-1\) to \(k\)) for motion constraints.
+
+Given matched landmarks, ORB-SLAM3 estimates pose by minimizing robust reprojection error:
+
+$$
+\mathbf{T}_{k}^{*}
+=
+\arg\min_{\mathbf{T}_k \in SE(3)}
+\sum_{i}
+\rho\!\left(
+\left\|
+\mathbf{u}_{i,k}
+-
+\pi\!\left(\mathbf{K}\,\mathbf{T}_k\,\mathbf{X}_i\right)
+\right\|^2
+\right),
+$$
+
+where \(\pi(\cdot)\) is perspective projection and \(\rho(\cdot)\) is a robust loss that reduces outlier impact.
+
+After tracking, local bundle adjustment jointly refines nearby poses and landmarks:
+
+$$
+\min_{\{\mathbf{T}_j\},\{\mathbf{X}_i\}}
+\sum_{(i,j)\in\mathcal{O}}
+\rho\!\left(
+\left\|
+\mathbf{u}_{i,j}
+-
+\pi\!\left(\mathbf{K}\,\mathbf{T}_j\,\mathbf{X}_i\right)
+\right\|^2
+\right).
+$$
+
+In this project, the optimized pose is published as `/vo/pose` and `/vo/odometry`. Since this estimate is local and can accumulate drift during long runs, it is fused with wheel odometry in `robot_localization` EKF to produce a smoother and more stable `odom` estimate for navigation.
 
 #### ORB-SLAM3 Features and Parameters Used
 
