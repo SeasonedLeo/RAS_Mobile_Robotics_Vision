@@ -520,12 +520,15 @@ When the required data streams were available, however, the perception and plann
 **Figure 2.** System Snapshot after a Next-Best-View had been Generated.
 
 
+A second major challenge arose during system integration, specifically in the navigation and control module. As discussed earlier, Nav2 assumes the availability of a map, and our attempts to bypass this requirement by running slam_toolbox concurrently were not successful. As a result, we replaced the original navigation plan with a lightweight PD-based local controller that drives the robot to the selected goal pose directly in the odom frame.
 
+This substitution enabled local motion execution and allowed the closed-loop pipeline to continue operating without a global map. However, system-level trials revealed a remaining limitation: although the TurtleBot4 moved toward the selected next-best-view position, its final orientation at the goal did not fully align with the desired NBV pose. This behavior can be observed in the full demo video below. Due to time constraints near the end of the semester, this issue was not fully resolved in the final implementation
 
 
 ### 3.2.1 Demo Links
 
 - `Perception & Planning Demo :` [https://youtu.be/uHptjgO3Q7Y](https://youtu.be/uHptjgO3Q7Y)
+- `Full System Demo :` [https://youtu.be/R4nFs0lb5PI](https://youtu.be/R4nFs0lb5PI)
 
 ### 3.3 Discussion of Results
 
