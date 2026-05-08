@@ -500,27 +500,19 @@ When radius randomization is enabled, each candidate radius is sampled in the in
 
 ### 3.1 Experimental Setup
 
-<!-- TODO: Describe hardware, software version, environment, trial conditions, and what counts as success. -->
+The experimental platform is a TurtleBot4 operating in an indoor environment using an RGB-D / stereo sensing stack together with local odometry and visual-odometry-based localization. The active perception pipeline was evaluated on target objects including a box and a cylinder, with all perception, planning, and motion execution expressed in the local `odom` frame rather than a global map frame. Each trial began from a reset local reference by calling the odometry reset service so that `odom` returned to zero before data collection. A successful run was defined as detecting the target, estimating its pose, and either reaching a sufficiently confident final estimate or triggering viewpoint updates when confidence remained low.
 
-Document the robot configuration, sensing stack, environment conditions, object type(s), and any reset procedure used between trials.
+### 3.2 Experimental Results
 
 
-<!-- TODO: Milestone 3 expects reliability data across at least 10 trials. -->
 
-| Trial | Mission Outcome | Detection Success | Pose Quality | NBV / Navigation Success | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-| 2 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-| 3 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-| 4 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-| 5 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-| 6 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-| 7 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-| 8 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-| 9 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
-| 10 | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
 
-### 3.5 Discussion of Results
+
+### 3.2.1 Demo Links
+
+- `Perception & Planning Demo : `
+
+### 3.3 Discussion of Results
 
 The ROS bag comparison between visual odometry (VO) and wheel odometry (`/odom`) shows strong agreement in the straight segment and larger divergence in the curved/loop segment.
 
@@ -596,17 +588,17 @@ Every custom module discussed in this report must include a direct repository hy
 
 | Module | Role in System | Direct Link |
 | :--- | :--- | :--- |
-| `cylinder_finder.py` | Cylinder detection from point clouds | `TODO` |
-| `box_finder.py` | Box detection from point clouds | `TODO` |
-| `pose_estimator.py` | Pose estimation in the planning frame | `TODO` |
-| `confidence_evaluator.py` | Confidence scoring service | `TODO` |
-| `nbv_planner.py` | Next-best-view planning | `TODO` |
-| `orchestrator.py` | Active perception coordination | `TODO` |
-| `orb_vo.yaml` | localization config | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/orb_vo.yaml` |
-| `orb_vo_node.py` | Visual odometry integration | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/orb_ekf/orb_vo_node.py` |
-| `ekf.yaml` / localization config | Sensor fusion configuration | `https://github.com/mohammadnsr1/MobileRobots_Active_Perception/tree/main/src/ORB_EKF/config/ekf.yaml` |
+| `cylinder_finder.py` | Cylinder detection from point clouds | [cylinder_finder.py](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/cylinder_finder.py) |
+| `box_finder.py` | Box detection from point clouds | [box_finder.py](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/box_finder.py) |
+| `pose_estimator.py` | Pose estimation in the planning frame | [pose_estimator.py](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/pose_estimator.py) |
+| `confidence_evaluator.py` | Confidence scoring service | [confidence_evaluator.py](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/confidence_evaluator.py) |
+| `nbv_planner.py` | Next-best-view planning | [nbv_planner.py](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/nbv_planner.py) |
+| `orchestrator.py` | Active perception coordination | [orchestrator.py](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/orchestrator.py) |
+| `odom_controller.py` | Local odom-frame navigation controller | [odom_controller.py](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/active_perception/active_perception/odom_controller.py) |
+| `orb_vo.yaml` | Localization configuration | [orb_vo.yaml](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/ORB_EKF/config/orb_vo.yaml) |
+| `orb_vo_node.py` | Visual odometry integration | [orb_vo_node.py](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/ORB_EKF/orb_ekf/orb_vo_node.py) |
+| `ekf.yaml` | Sensor fusion configuration | [ekf.yaml](https://github.com/mohammadnsr1/MobileRobots_Active_Perception/blob/main/src/ORB_EKF/config/ekf.yaml) |
 
-> Note: Replace each `TODO` entry with a clickable GitHub URL to the exact file and line number used in your implementation.
 {: .note }
 
 
