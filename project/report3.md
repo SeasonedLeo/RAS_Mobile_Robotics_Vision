@@ -71,7 +71,7 @@ Together, these two nodes provide the decision-making layer that closes the acti
 
 
 
-### 2.1.3 (Visual Odometry or Estimation & Localization Module) Individual Localization Section (Vikas Narang): ORB-SLAM3 + EKF
+### 2.1.3 (Visual Odometry or Estimation & Localization Module) Individual Localization Section: ORB-SLAM3 + EKF
 
 This section documents the localization module contribution based on ORB-SLAM3 stereo visual odometry integrated with EKF fusion.
 
